@@ -1,0 +1,129 @@
+:root {
+  --ailab-switcher-line: rgba(255, 255, 255, 0.34);
+  --ailab-switcher-fill: rgba(0, 0, 0, 0.14);
+}
+
+.md-tabs__item[hidden],
+.md-nav--primary > .md-nav__list > .md-nav__item[hidden] {
+  display: none !important;
+}
+
+.ailab-service-switcher {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 auto;
+  margin-left: 0.35rem;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.ailab-service-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.38rem;
+  min-width: 4.4rem;
+  height: 1.55rem;
+  padding: 0 0.46rem 0 0.55rem;
+  border: 1px solid var(--ailab-switcher-line);
+  border-radius: 0.28rem;
+  color: #fff;
+  background: var(--ailab-switcher-fill);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ailab-service-switcher__trigger:hover,
+.ailab-service-switcher__trigger[aria-expanded="true"] {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ailab-service-switcher__chevron {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-0.08rem) rotate(45deg);
+}
+
+.ailab-service-switcher__trigger[aria-expanded="true"] .ailab-service-switcher__chevron {
+  transform: translateY(0.08rem) rotate(225deg);
+}
+
+.ailab-service-switcher__menu {
+  position: absolute;
+  top: calc(100% + 0.28rem);
+  right: 0;
+  min-width: 6.4rem;
+  padding: 0.2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.32rem;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 0.3rem 0.8rem rgba(0, 0, 0, 0.16);
+}
+
+.ailab-service-switcher__menu[hidden] {
+  display: none;
+}
+
+.ailab-service-switcher__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 1.65rem;
+  padding: 0.28rem 0.48rem;
+  border: 0;
+  border-radius: 0.2rem;
+  color: var(--md-default-fg-color);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ailab-service-switcher__option:hover,
+.ailab-service-switcher__option:focus-visible {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.ailab-service-switcher__option.is-active {
+  font-weight: 750;
+}
+
+.ailab-service-switcher__option.is-active::after {
+  content: "✓";
+  margin-left: 0.6rem;
+  color: var(--md-accent-fg-color);
+}
+
+.ailab-service-switcher__trigger:focus-visible,
+.ailab-service-switcher__option:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.ailab-service-switcher__option:focus-visible {
+  outline-color: var(--md-accent-fg-color);
+  outline-offset: -2px;
+}
+
+@media screen and (max-width: 44.984375em) {
+  .ailab-service-switcher {
+    margin-left: 0.16rem;
+    font-size: 0.58rem;
+  }
+
+  .ailab-service-switcher__trigger {
+    min-width: 4rem;
+    height: 1.45rem;
+    padding-inline: 0.42rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ailab-service-switcher__chevron {
+    transition: none;
+  }
+}

@@ -1,0 +1,76 @@
+# 목차(네비게이션) 정의. 여기 적은 순서 그대로 사이트 메뉴가 만들어집니다.
+#
+# 최상위 7개 섹션은 `raw/ai-lab-ops/AI advanced lab 확정.md`(확정안) 원문의 절 구조에
+# 직접 대응합니다. 각 섹션 index는 하위 목록보다 먼저 그 섹션의 역할을 설명합니다.
+
+- 홈:
+    - index.md
+    - 강사 소개: course/instructor.md
+    - 과정 소개: course/orientation.md
+
+- Warm Up:
+    - warmup/index.md
+    - 터미널 기초: warmup/terminal-basics.md
+    - Git 기초: warmup/git-basics.md
+    - GitHub 기초: warmup/github-basics.md
+    - Markdown 기초: warmup/markdown.md
+    - Claude Code 첫 실행: warmup/claude-code-start.md
+
+- Claude Code:
+    - Harness란: concepts/what-is-harness.md
+    - Turn과 Agent Loop: claude-code/turn-concept.md
+
+    - Context를 구성하는 요소들:
+        - Context: concepts/what-is-context.md
+        - CLAUDE.md: claude-code/claude-md-placement.md
+        - MEMORY.md: concepts/memory-md.md
+        - Skill: concepts/what-is-skill.md
+
+    - 권한/실행 (행동 승인·차단):
+        - Rule: concepts/what-is-rule.md
+        - Hook: concepts/what-is-hook.md
+        - 권한 모드와 슬래시 명령: claude-code/permissions-and-commands.md
+
+    - 멀티에이전트 (병렬 실행·격리):
+        - Subagent: concepts/what-is-subagent.md
+        - Agent Teams: concepts/what-is-agent-teams.md
+
+    - 외부연결 (MCP):
+        - MCP: mcp/what-is-mcp.md
+
+    - Marketplace & Plugin:
+        - Marketplace: concepts/marketplace.md
+        - Plugin 만들고 배포하기: concepts/plugin-creation.md
+
+    - Engineering 3축:
+        - Context Engineering: concepts/context-engineering.md
+        - Harness Engineering: concepts/harness-engineering.md
+        - Loop Engineering: concepts/loop-engineering.md
+
+    - 실무 레퍼런스:
+        - 터미널 기능 총정리: claude-code/terminal-features.md
+        - 세션 이름짓기·재개: claude-code/session-lifecycle.md
+
+- 실습:
+    - course/index.md
+    - 실습 문제 정의: course/problem-definition.md
+    - 실습 자료: course/download-course-material.md
+    - "stage1 : 프롬프트만으로 작업해보기": course/stage1-prompt-only.md
+    - "stage2 : 컨텍스트 추가해보기": course/stage2-context-attach.md
+    - "stage3 : 하네스로 구축하기": course/stage3-harness.md
+    - "stage4 : 자가 수정 loop 만들기": course/stage4-loop.md
+    - "stage5 : 오라클로 판정 기준 세우기": course/stage5-oracle.md
+    - "stage6 : MCP로 실시간 연결하기": course/stage6-mcp.md
+    - "stage7 : 플러그인으로 배포하기": course/stage7-plugin.md
+    - "stage8 : 지식으로 자산화하기": course/stage8-knowledge.md
+
+- 개인 프로젝트:
+    - course/personal-project.md
+
+- 참고 자료:
+    - 토큰 절약 기법: reference/token-saving.md
+    - Loop 의 종류: reference/loop-engineering.md
+    - AI SDLC 소개: reference/ai-sdlc.md
+
+- 강의 진행 자료:
+    - curriculum/index.md

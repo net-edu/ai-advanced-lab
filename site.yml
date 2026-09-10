@@ -1,0 +1,24 @@
+# 사이트 설정. 파이프라인이 이 파일과 content/toc.yml 로 MkDocs 설정을 생성합니다.
+
+site_name: AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵
+site_description: MkDocs 로 만드는 문서 사이트
+
+# ⚠️ 사외 배포 전 실제 공개 GitHub Pages 주소로 바꾸세요.
+#    `<GITHUB_OWNER>`와 `<REPOSITORY>`를 그대로 두면 `./pipeline deploy`가 중단됩니다.
+#    형식: https://<GITHUB_OWNER>.github.io/<REPOSITORY>/
+site_url: https://<GITHUB_OWNER>.github.io/<REPOSITORY>/
+
+# 헤더에서 Claude·Codex·Gemini 학습 트랙을 바꾸는 선택기를 표시합니다.
+service_switcher_enabled: false
+
+deploy:
+  remote: origin      # 푸시할 git 리모트 이름
+  branch: gh-pages    # 빌드 결과를 올릴 브랜치 (원본 md 는 main 에 그대로 남습니다)
+
+theme:
+  language: ko
+  primary: indigo     # Material 색상 이름
+  accent: blue
+  # 상단 사이트 제목과 브라우저 탭에 같은 마크를 씁니다.
+  logo: assets/ai-advanced-lab-mark.svg
+  favicon: assets/ai-advanced-lab-mark.svg

@@ -1,0 +1,26 @@
+# 파이프라인 작업 디렉터리 (빌드 산출물 - 커밋하지 않습니다)
+.build/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs
+*.log
+
+# 원본 데이터 - 자체 git 저장소이며 별도 리모트가 있습니다 (중첩 추적하지 않음).
+#   sample_src/llm-wiki-content/ 는 이 저장소가 추적합니다.
+sample_src/llm-wiki/
+
+# 윤문 하네스 작업 스냅샷 (생성물 - 필요할 때 다시 뜹니다)
+polish/snapshots/

@@ -1,0 +1,16 @@
+[project]
+name = "github-page-pipeline"
+version = "0.1.0"
+description = "content/ 의 Markdown 과 toc.yml 을 GitHub Pages 로 빌드/배포하는 파이프라인"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.5",
+    "mkdocs-glightbox>=0.5.2",
+    "pymdown-extensions>=10.0",
+]
+
+# 의존성 설치는 `pipeline` 스크립트가 표준 venv + pip 으로 직접 수행합니다.
+# 패키지 인덱스는 PIPELINE_PIP_INDEX, 추가 pip 인자는 PIPELINE_PIP_ARGS 로 조정합니다.
+# 이 파일의 dependencies 목록과 `pipeline` 의 REQUIREMENTS 는 같이 유지하세요.

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLI 하네스 흐름 실험실</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5d6874;
+      --paper: #f7f8fa;
+      --panel: #ffffff;
+      --line: #cbd2da;
+      --accent: #0f766e;
+      --accent-soft: #dff4f0;
+      --danger: #a33a2b;
+      --danger-soft: #fbe9e5;
+      --ok: #2f6b3b;
+      --ok-soft: #e5f3e7;
+      font-family: "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); }
+    button, select { font: inherit; }
+    .shell { max-width: 1180px; margin: 0 auto; padding: 28px 22px 44px; }
+    header { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end; border-bottom: 3px solid var(--ink); padding-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.65rem, 4vw, 2.65rem); line-height: 1.14; letter-spacing: -.035em; }
+    .lede { margin: 0; color: var(--muted); max-width: 68ch; line-height: 1.65; }
+    .selectors { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: .82rem; }
+    select { min-width: 150px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); color: var(--ink); padding: 9px 34px 9px 10px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 18px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .9rem; }
+    .meta strong { color: var(--ink); }
+    main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, .8fr); gap: 24px; margin-top: 24px; }
+    .flow, .evidence { background: var(--panel); border: 1px solid var(--line); }
+    .flow { padding: 24px; }
+    .evidence { padding: 22px; align-self: start; position: sticky; top: 16px; }
+    h2 { margin: 0; font-size: 1.15rem; }
+    .goal { margin: 8px 0 24px; color: var(--muted); line-height: 1.6; }
+    .rail { list-style: none; margin: 0; padding: 0; }
+    .step { position: relative; display: grid; grid-template-columns: 42px 1fr; gap: 14px; padding-bottom: 22px; opacity: .45; }
+    .step:not(:last-child)::after { content: ""; position: absolute; left: 20px; top: 42px; bottom: 2px; width: 2px; background: var(--line); }
+    .step.active { opacity: 1; }
+    .step.done { opacity: .78; }
+    .step.done:not(:last-child)::after { background: var(--accent); }
+    .marker { width: 42px; height: 42px; display: grid; place-items: center; border: 2px solid var(--line); border-radius: 50%; background: var(--panel); font-weight: 750; }
+    .active .marker { border-color: var(--accent); background: var(--accent); color: white; outline: 4px solid var(--accent-soft); }
+    .done .marker { border-color: var(--accent); color: var(--accent); }
+    .gate .marker { border-radius: 5px; transform: rotate(45deg); }
+    .gate .marker span { transform: rotate(-45deg); }
+    .step h3 { margin: 1px 0 4px; font-size: 1rem; }
+    .actor { color: var(--accent); font-size: .78rem; font-weight: 700; }
+    .detail { margin: 6px 0 0; color: var(--muted); line-height: 1.55; }
+    code { font-family: "Cascadia Code", "D2Coding", ui-monospace, monospace; font-size: .9em; background: #eef1f4; padding: .12em .35em; border-radius: 3px; overflow-wrap: anywhere; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; padding-top: 6px; }
+    .controls button { border: 1px solid var(--ink); border-radius: 4px; background: var(--panel); color: var(--ink); padding: 9px 14px; cursor: pointer; }
+    .controls button.primary { background: var(--ink); color: white; }
+    .controls button:disabled { opacity: .35; cursor: not-allowed; }
+    button:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .step-count { align-self: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .status { margin: 16px 0; padding: 12px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); line-height: 1.5; }
+    .status.fail { border-color: var(--danger); background: var(--danger-soft); }
+    .status.pass { border-color: var(--ok); background: var(--ok-soft); }
+    .checks { margin: 12px 0 0; padding-left: 20px; }
+    .checks li { margin: 9px 0; line-height: 1.45; }
+    .note { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 16px; color: var(--muted); font-size: .86rem; line-height: 1.55; }
+    @media (max-width: 800px) {
+      header, main { grid-template-columns: 1fr; }
+      .selectors { justify-content: flex-start; }
+      .evidence { position: static; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .marker, .step { transition: opacity .16s ease, background-color .16s ease, color .16s ease; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>CLI 하네스 흐름 실험실</h1>
+        <p class="lede">명령을 실행하는 흉내가 아니라, 각 구성요소가 언제 개입하고 실패 시 어디로 돌아가는지를 확인하는 개념 모형입니다.</p>
+      </div>
+      <div class="selectors">
+        <label>서비스
+          <select id="provider">
+            <option value="codex">Codex CLI</option>
+            <option value="gemini">Gemini CLI</option>
+          </select>
+        </label>
+        <label>시나리오
+          <select id="scenario"></select>
+        </label>
+      </div>
+    </header>
+    <ul class="meta">
+      <li>서비스: <strong id="providerName"></strong></li>
+      <li>설정 기준: <strong id="configName"></strong></li>
+      <li>표현 범위: <strong>검증된 교안 계약</strong></li>
+    </ul>
+    <main>
+      <section class="flow" aria-labelledby="scenarioTitle">
+        <h2 id="scenarioTitle"></h2>
+        <p class="goal" id="goal"></p>
+        <ol class="rail" id="rail"></ol>
+        <div class="controls">
+          <button id="prev" type="button">이전 단계</button>
+          <span class="step-count" id="stepCount" aria-live="polite"></span>
+          <button class="primary" id="next" type="button">다음 단계</button>
+        </div>
+      </section>
+      <aside class="evidence" aria-labelledby="evidenceTitle">
+        <h2 id="evidenceTitle">현재 단계의 판정</h2>
+        <div class="status" id="status" aria-live="polite"></div>
+        <h2>완료 조건</h2>
+        <ul class="checks" id="checks"></ul>
+        <p class="note">이 화면은 실제 CLI 실행 기록이 아닙니다. 명령 성공 여부와 버전별 동작은 교안의 재현 절차로 직접 확인하고, 실행 증거에는 서비스·버전·날짜·명령·종료 코드를 남기세요.</p>
+      </aside>
+    </main>
+  </div>
+  <script>
+    const profiles = {
+      codex: {
+        name: 'Codex CLI', accent: '#0f766e', soft: '#dff4f0',
+        config: '.codex/hooks.json · .codex/config.toml',
+        instruction: 'AGENTS.md', skill: '.agents/skills/fair-value-report/SKILL.md',
+        reviewer: '.codex/agents/report-reviewer.toml',
+        hook: 'Stop Hook이 decision: "block"으로 수정 요청',
+        inspect: '/status로 확인하고 필요할 때 /compact',
+        mcp: 'codex mcp list로 연결과 인증 상태 확인',
+        package: '.codex-plugin/plugin.json 검증 → Marketplace 등록 → codex plugin add',
+        batch: 'codex exec --json --output-last-message 결과와 종료 코드 저장'
+      },
+      gemini: {
+        name: 'Gemini CLI', accent: '#3158a6', soft: '#e7edfb',
+        config: '.gemini/settings.json',
+        instruction: 'GEMINI.md', skill: '.gemini/skills/fair-value-report/SKILL.md',
+        reviewer: '.gemini/agents/report-reviewer.md',
+        hook: 'AfterAgent Hook이 decision: "deny"로 재시도 요청',
+        inspect: '/stats와 /memory show로 확인하고 필요할 때 /compress',
+        mcp: '/mcp list로 연결과 도구 상태 확인',
+        package: 'gemini-extension.json 검증 → 로컬 link 테스트 → Extension 설치',
+        batch: 'gemini --prompt ... --output-format stream-json 결과와 종료 코드 저장'
+      }
+    };
+
+    const scenarioOrder = ['harness', 'context', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7', 'stage8'];
+    const scenarioLabels = {
+      harness: 'Harness 구성', context: 'Context 흐름', stage3: 'Stage 3 · Harness',
+      stage4: 'Stage 4 · Loop', stage5: 'Stage 5 · Oracle', stage6: 'Stage 6 · MCP',
+      stage7: 'Stage 7 · 배포', stage8: 'Stage 8 · 지식 자산화'
+    };
+
+    function scenarios(p) {
+      return {
+        harness: {
+          goal: '지침·실행 능력·검증·외부 연결을 한 덩어리로 보지 않고 역할별로 배치합니다.',
+          steps: [
+            ['사람', '작업 계약 정의', `산출물, 금지 행동, 승인 경계를 ${p.instruction}에 기록합니다.`],
+            ['에이전트', '필요한 절차 발견', `${p.skill}의 설명을 읽고 해당 작업에 맞을 때만 본문을 로드합니다.`],
+            ['도구', '결정론 검사 실행', '스크립트와 테스트가 형식·계산·누락을 같은 입력에서 다시 검사합니다.', true],
+            ['사람', '외부 행동 승인', '발송·배포·권한 확대는 별도 승인 뒤 실행하고 결과 식별자를 남깁니다.', true]
+          ],
+          checks: ['지침과 실행 정책의 역할이 분리됨', '검사 실패가 재현 가능한 입력을 남김', '외부 부작용은 사람 승인 전 실행되지 않음']
+        },
+        context: {
+          goal: '항상 필요한 정보와 작업 순간에 필요한 정보를 분리해 Context의 비용과 오염을 줄입니다.',
+          steps: [
+            ['CLI', '세션 지침 로드', `${p.instruction}의 적용 범위와 우선순위를 확인합니다.`],
+            ['에이전트', '작업 파일 탐색', '질문에 필요한 파일과 변경 범위만 찾아 읽습니다.'],
+            ['에이전트', '전문 절차 지연 로딩', `${p.skill}은 관련 작업으로 판단된 뒤에만 상세 절차를 제공합니다.`],
+            ['사람', 'Context 상태 점검', `${p.inspect}. 오래된 가정은 새 세션 또는 명시적 요약으로 끊습니다.`, true]
+          ],
+          checks: ['상시 지침과 지연 로딩 자료를 구분함', '출처 없는 기억을 사실로 취급하지 않음', '새 세션 전 인수인계 상태를 기록함']
+        },
+        stage3: {
+          goal: '프롬프트에 의존하던 절차를 프로젝트 파일로 옮겨 반복 가능한 Harness를 만듭니다.',
+          steps: [
+            ['사람', '입력과 산출물 고정', 'fixture, 보고서 경로, 필수 섹션과 승인 지점을 정합니다.'],
+            ['CLI', '프로젝트 지침 적용', `${p.instruction}에서 데이터 경계와 완료 조건을 읽습니다.`],
+            ['에이전트', 'Skill 절차 수행', `${p.skill} 순서대로 정형·비정형 자료를 읽고 초안을 씁니다.`],
+            ['리뷰어', '격리된 검토', `${p.reviewer}가 원문과 초안을 대조하고 판정 근거를 남깁니다.`, true]
+          ],
+          checks: ['깨끗한 프로젝트에서도 같은 구조로 시작 가능', '누락 입력일 때 명확히 중단', '검토자가 작성자의 추론을 그대로 전제하지 않음']
+        },
+        stage4: {
+          goal: '결정론 검사와 주관적 검토를 분리하고, 재시도 횟수가 제한된 수정 Loop를 만듭니다.',
+          steps: [
+            ['에이전트', '보고서 초안 작성', '원자료 ID와 계산 입력을 포함한 초안을 저장합니다.'],
+            ['검사기', '정형 Oracle 판정', '필수 섹션, 숫자 재계산, 출처 마커를 독립 스크립트로 검사합니다.', true],
+            ['리뷰어', '비정형 Oracle 판정', `${p.reviewer}가 균형·근거·결론 일관성을 루브릭으로 채점합니다.`, true],
+            ['Hook', '종료 시 게이트 적용', `${p.hook}. 같은 실패가 반복되면 자동 반복을 멈추고 사람에게 넘깁니다.`, true]
+          ],
+          checks: ['검사기 단독 실행 테스트가 있음', 'Hook이 파일 변경을 되돌린다고 주장하지 않음', 'stop_hook_active와 재시도 상한을 처리함']
+        },
+        stage5: {
+          goal: '좋은 결과물에서 판정 기준을 추출하되 표본의 한계를 명시하고 버전이 있는 Oracle로 관리합니다.',
+          steps: [
+            ['사람', 'Golden set 승인', '문서 ID, hash, 승인자, 승인일과 사용 목적을 manifest에 기록합니다.'],
+            ['분석', '기준 후보 추출', '공통 구조와 교육용 범위를 찾고 보편적 사실이 아닌 표본 관찰로 표시합니다.'],
+            ['검사기', '정형 기준 적용', '수치 범위·필수 메타데이터·예외 마커를 검사합니다.', true],
+            ['리뷰어', '예외 근거 판정', '범위 밖 결론은 근거의 충분성과 충돌 공개 여부를 추가 채점합니다.', true]
+          ],
+          checks: ['Golden 문서와 Oracle 버전이 연결됨', '교육용 범위를 현재 시장 사실로 표현하지 않음', '예외 승인과 기준 변경 이력이 남음']
+        },
+        stage6: {
+          goal: '변하는 외부 데이터를 MCP로 읽되 원시 응답·폴백·승인 경계를 분리합니다.',
+          steps: [
+            ['CLI', 'MCP 상태 확인', p.mcp],
+            ['MCP', '읽기 전용 데이터 호출', '응답 원문, 조회 시각, 서버 식별자를 먼저 저장합니다.'],
+            ['검사기', '내부 일관성 재계산', '캡처한 원시 응답에서 지표를 다시 계산하고 폴백이면 명시적 마커를 요구합니다.', true],
+            ['사람', '외부 행동 별도 승인', '메일·게시 같은 쓰기 MCP는 내용 미리보기와 idempotency key 확인 뒤 별도 실행합니다.', true]
+          ],
+          checks: ['예시 주소는 example.invalid 또는 환경 설정 사용', '변동 수치를 교안 정답으로 하드코딩하지 않음', '읽기 MCP 성공이 발송 승인을 뜻하지 않음']
+        },
+        stage7: {
+          goal: '프로젝트에서 검증한 Harness를 설치·제거·업데이트 가능한 공급자 배포 단위로 포장합니다.',
+          steps: [
+            ['개발자', '최소 Manifest 작성', p.package.split(' → ')[0] + '과 포함 자산의 상대 경로를 선언합니다.'],
+            ['CLI', '로컬 검증', p.package],
+            ['테스터', '깨끗한 프로젝트 설치', '원본 프로젝트에 우연히 남은 파일 없이 기능과 누락 데이터 오류를 확인합니다.', true],
+            ['관리자', '배포 정책 검토', '출처, 버전, 권한, Hook, MCP 의존성과 제거 절차를 검토합니다.', true]
+          ],
+          checks: ['Manifest 경로가 실제 파일과 일치', '프로젝트 밖 절대 경로에 의존하지 않음', '업데이트·제거·실패 복구 절차가 있음']
+        },
+        stage8: {
+          goal: '원본 문서를 식별·정규화·색인하고 변경분만 처리하는 재현 가능한 지식 파이프라인을 만듭니다.',
+          steps: [
+            ['수집기', '원본 등록', 'source ID, 원본 위치, SHA-256, 수집 시각을 manifest에 남깁니다.'],
+            ['감지기', '신규·변경·고아 분류', '이전 manifest와 현재 hash를 비교해 처리 대상을 결정합니다.', true],
+            ['CLI', 'Headless 변환', p.batch],
+            ['검사기', '산출물과 색인 검증', '출처 역참조, 스키마, 중복 ID, 고아 산출물과 실패 로그를 검사합니다.', true]
+          ],
+          checks: ['같은 원본과 설정으로 재실행 가능', '변환 실패가 성공 목록에 섞이지 않음', '삭제·고아 정책과 수동 재처리 절차가 있음']
+        }
+      };
+    }
+
+    const providerSelect = document.querySelector('#provider');
+    const scenarioSelect = document.querySelector('#scenario');
+    const rail = document.querySelector('#rail');
+    let current = 0;
+
+    for (const key of scenarioOrder) {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = scenarioLabels[key];
+      scenarioSelect.append(option);
+    }
+
+    function safeParam(name, allowed, fallback) {
+      const value = new URLSearchParams(location.search).get(name);
+      return allowed.includes(value) ? value : fallback;
+    }
+
+    function render(reset = true) {
+      if (reset) current = 0;
+      const provider = providerSelect.value;
+      const profile = profiles[provider];
+      const scenario = scenarios(profile)[scenarioSelect.value];
+      document.documentElement.style.setProperty('--accent', profile.accent);
+      document.documentElement.style.setProperty('--accent-soft', profile.soft);
+      document.querySelector('#providerName').textContent = profile.name;
+      document.querySelector('#configName').textContent = profile.config;
+      document.querySelector('#scenarioTitle').textContent = scenarioLabels[scenarioSelect.value];
+      document.querySelector('#goal').textContent = scenario.goal;
+      document.querySelector('#checks').replaceChildren(...scenario.checks.map(text => {
+        const li = document.createElement('li'); li.textContent = text; return li;
+      }));
+      rail.replaceChildren(...scenario.steps.map((step, index) => {
+        const li = document.createElement('li');
+        li.className = `step${step[3] ? ' gate' : ''}`;
+        li.innerHTML = `<div class="marker"><span>${index + 1}</span></div><div><span class="actor"></span><h3></h3><p class="detail"></p></div>`;
+        li.querySelector('.actor').textContent = step[0];
+        li.querySelector('h3').textContent = step[1];
+        li.querySelector('.detail').textContent = step[2];
+        return li;
+      }));
+      update();
+    }
+
+    function update() {
+      const profile = profiles[providerSelect.value];
+      const scenario = scenarios(profile)[scenarioSelect.value];
+      [...rail.children].forEach((node, index) => {
+        node.classList.toggle('active', index === current);
+        node.classList.toggle('done', index < current);
+      });
+      const step = scenario.steps[current];
+      const status = document.querySelector('#status');
+      status.className = `status${step[3] ? ' fail' : ''}${current === scenario.steps.length - 1 ? ' pass' : ''}`;
+      status.textContent = step[3]
+        ? `게이트 단계입니다. 완료 조건을 충족하지 못하면 이전 산출물로 돌아가며, 같은 실패가 반복되면 자동 진행을 멈춥니다.`
+        : `${step[0]}가 “${step[1]}”을 수행합니다. 아직 뒤 단계의 통과를 가정하지 않습니다.`;
+      document.querySelector('#stepCount').textContent = `${current + 1} / ${scenario.steps.length}`;
+      document.querySelector('#prev').disabled = current === 0;
+      document.querySelector('#next').disabled = current === scenario.steps.length - 1;
+    }
+
+    document.querySelector('#prev').addEventListener('click', () => { current -= 1; update(); });
+    document.querySelector('#next').addEventListener('click', () => { current += 1; update(); });
+    providerSelect.addEventListener('change', () => render());
+    scenarioSelect.addEventListener('change', () => render());
+    providerSelect.value = safeParam('provider', Object.keys(profiles), 'codex');
+    scenarioSelect.value = safeParam('scenario', scenarioOrder, 'harness');
+    render();
+  </script>
+</body>
+</html>

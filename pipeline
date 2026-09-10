@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# GitHub Pages 문서 파이프라인 진입점.
+#
+#   ./pipeline preview   테스트용 - 빌드 후 로컬 서버로 확인
+#   ./pipeline deploy    실배포  - gh-pages 브랜치로 푸시
+#
+# 파이썬 환경은 이 스크립트가 알아서 준비한다 (.venv 자동 생성 + 의존성 설치).
+# 처음 한 번만 설치가 일어나고, 이후에는 바로 실행된다.
+#
+# 환경변수로 조정할 수 있는 것:
+#   PIPELINE_VENV      가상환경 경로 (기본값 .venv)
+#   PIPELINE_PIP_INDEX 패키지 인덱스 URL. 빈 문자열로 두면 공개 PyPI 를 쓴다
+#   PIPELINE_PIP_ARGS  pip 에 그대로 넘길 추가 인자 (예: --cert /path/ca.pem)
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+# 오류 안내에 다시 실행할 명령을 보여주기 위해 원래 인자를 기억해 둔다.
+INVOKED_ARGS="$*"
+
+VENV_DIR="${PIPELINE_VENV:-.venv}"
+
+# pyproject.toml 의 dependencies 와 같은 목록을 유지할 것.
+REQUIREMENTS=(
+  "mkdocs>=1.6.1"
+  "mkdocs-material>=9.5"
+  "mkdocs-glightbox>=0.5.2"
+  "pymdown-extensions>=10.0"
+)
+
+# 사내망 Artifactory 미러. 외부망에서는 PIPELINE_PIP_INDEX="" 로 두면 공개 PyPI 를 쓴다.
+PIPELINE_PIP_INDEX=""
+
+# 가상환경 안의 파이썬 경로 (POSIX / Windows 레이아웃 모두 대응).
+venv_python() {
+  for candidate in "$VENV_DIR/bin/python" "$VENV_DIR/Scripts/python.exe"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+has_deps() {
+  "$1" -c "import mkdocs, material, pymdownx" >/dev/null 2>&1
+}
+
+find_system_python() {
+  for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+fail() {
+  printf '%s\n' "$@" >&2
+  exit 1
+}
+
+# 셸에 그대로 붙여넣을 수 있도록 각 패키지 지정자를 따옴표로 감싼다 (>= 리다이렉션 방지).
+quoted_requirements() {
+  local out="" item
+  for item in "${REQUIREMENTS[@]}"; do
+    out+=" '$item'"
+  done
+  printf '%s' "${out# }"
+}
+
+install_deps() {
+  local python="$1"
+  local pip_args=()
+
+  # PIP_INDEX_URL 이나 pip.conf 로 이미 인덱스를 정해 뒀다면 건드리지 않는다.
+  if [[ -z "${PIP_INDEX_URL:-}" ]]; then
+    local index="${PIPELINE_PIP_INDEX-$DEFAULT_INDEX}"
+    [[ -n "$index" ]] && pip_args+=(--index-url "$index")
+  fi
+  if [[ -n "${PIPELINE_PIP_ARGS:-}" ]]; then
+    # 사용자가 준 추가 인자는 공백으로 분리해서 넘긴다.
+    # shellcheck disable=SC2206
+    pip_args+=(${PIPELINE_PIP_ARGS})
+  fi
+
+  echo "▶ 의존성을 설치합니다 (처음 한 번만)" >&2
+  # 빈 배열 확장은 오래된 bash 에서 set -u 에 걸리므로 아래 형태로 펼친다.
+  if ! "$python" -m pip install --disable-pip-version-check \
+       ${pip_args[@]+"${pip_args[@]}"} "${REQUIREMENTS[@]}" >&2; then
+    fail "" \
+      "ERROR: 의존성 설치에 실패했습니다." \
+      "" \
+      "  · 사내망 미러가 아닌 공개 PyPI 를 쓰려면" \
+      "      PIPELINE_PIP_INDEX= ./pipeline $INVOKED_ARGS" \
+      "  · 인증서(자체 서명 CA) 문제라면" \
+      "      PIPELINE_PIP_ARGS='--cert /경로/사내CA.pem' ./pipeline $INVOKED_ARGS" \
+      "  · 프록시가 필요한 망이면 HTTP_PROXY / HTTPS_PROXY 를 설정하세요." \
+      "" \
+      "설치만 따로 하려면:" \
+      "  $python -m pip install $(quoted_requirements)"
+  fi
+}
+
+create_venv() {
+  local system_python
+  system_python="$(find_system_python)" || fail \
+    "ERROR: python3 을 찾지 못했습니다. 파이썬 3.10 이상을 설치하세요."
+
+  echo "▶ 가상환경을 만듭니다: $VENV_DIR" >&2
+  if ! "$system_python" -m venv "$VENV_DIR" >&2; then
+    fail "" \
+      "ERROR: 가상환경 생성에 실패했습니다." \
+      "" \
+      "Debian/Ubuntu 계열이라면 venv 모듈이 별도 패키지입니다:" \
+      "  sudo apt install python3-venv python3-pip" \
+      "" \
+      "설치 권한이 없다면 시스템 파이썬에 직접 설치해도 됩니다:" \
+      "  $system_python -m pip install --user $(quoted_requirements)"
+  fi
+}
+
+# 1) 준비된 .venv 가 있으면 그대로 쓴다.
+if python_bin="$(venv_python)"; then
+  if has_deps "$python_bin"; then
+    exec "$python_bin" tools/pipeline.py "$@"
+  fi
+  # venv 는 있는데 의존성이 없거나 깨진 경우 → 채워 넣는다.
+  install_deps "$python_bin"
+  exec "$python_bin" tools/pipeline.py "$@"
+fi
+
+# 2) 사용자가 직접 활성화한 가상환경에 이미 의존성이 있으면 그것을 쓴다.
+if [[ -n "${VIRTUAL_ENV:-}" ]] && has_deps python; then
+  exec python tools/pipeline.py "$@"
+fi
+
+# 3) 아무것도 없으면 .venv 를 만들고 의존성을 설치한다.
+create_venv
+python_bin="$(venv_python)" || fail "ERROR: 만들어진 가상환경에서 파이썬을 찾지 못했습니다: $VENV_DIR"
+
+# Debian 계열에서 ensurepip 가 빠져 pip 없이 생성되는 경우가 있다.
+if ! "$python_bin" -m pip --version >/dev/null 2>&1; then
+  "$python_bin" -m ensurepip --upgrade >&2 || fail \
+    "ERROR: 가상환경에 pip 이 없습니다. 'sudo apt install python3-venv python3-pip' 후 다시 실행하세요."
+fi
+
+install_deps "$python_bin"
+exec "$python_bin" tools/pipeline.py "$@"

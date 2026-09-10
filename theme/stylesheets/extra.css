@@ -1,0 +1,22 @@
+.md-typeset mark,
+.md-typeset .critic.mark {
+  padding: 0.05em 0.25em;
+  font-style: normal;
+  color: inherit;
+  background: linear-gradient(
+    to top,
+    rgba(255, 214, 10, 0.62) 0%,
+    rgba(255, 214, 10, 0.62) 58%,
+    transparent 58%,
+    transparent 100%
+  );
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  letter-spacing: -0.01em;
+}

@@ -1,0 +1,115 @@
+/*
+ * AI Build LAB - document minimap
+ *
+ * Companion stylesheet for javascripts/minimap.js.
+ *
+ * The map is a fixed strip sitting BETWEEN the page body and the right-hand
+ * table of contents. `--ailab-minimap-top` and `--ailab-minimap-right` are
+ * measured and written by the script; the values here are only fallbacks used
+ * before the first layout pass.
+ *
+ * Desktop only by design; no mobile breakpoint handling.
+ */
+
+:root {
+  --ailab-minimap-width: 6.5rem;
+  --ailab-minimap-top: 4.8rem;
+  --ailab-minimap-right: var(--ailab-right-toc-width, 15rem);
+
+  --ailab-minimap-viewport: rgba(63, 81, 181, 0.16);
+  --ailab-minimap-viewport-border: rgba(63, 81, 181, 0.55);
+  --ailab-minimap-surface: rgba(0, 0, 0, 0.02);
+  --ailab-minimap-divider: rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="slate"] {
+  --ailab-minimap-viewport: rgba(159, 168, 255, 0.18);
+  --ailab-minimap-viewport-border: rgba(159, 168, 255, 0.55);
+  --ailab-minimap-surface: rgba(255, 255, 255, 0.03);
+  --ailab-minimap-divider: rgba(255, 255, 255, 0.1);
+}
+
+/*
+ * Reserve the strip between the body and the table of contents, so the map
+ * does not overlap either one and the page stays centered.
+ */
+.md-content {
+  margin-right: var(--ailab-minimap-width);
+  max-width: calc(
+    100vw - var(--ailab-left-nav-width, 0px) - var(--ailab-right-toc-width, 0px) -
+      var(--ailab-minimap-width)
+  );
+}
+
+.ailab-minimap {
+  position: fixed;
+  top: var(--ailab-minimap-top);
+  right: var(--ailab-minimap-right);
+  z-index: 3;
+  width: var(--ailab-minimap-width);
+  overflow: hidden;
+  background-color: var(--ailab-minimap-surface);
+  border-right: 1px solid var(--ailab-minimap-divider);
+  border-left: 1px solid var(--ailab-minimap-divider);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.ailab-minimap[hidden] {
+  display: none;
+}
+
+/*
+ * The cloned document. It lays out at the real content width (set by the
+ * script) and is then shrunk with a transform, which is what makes the map a
+ * faithful miniature of the rendered Markdown.
+ */
+.ailab-minimap__doc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Neutralize the wide-layout centering so the clone fills the strip exactly. */
+.ailab-minimap__doc > .md-content__inner {
+  max-width: none !important;
+  width: 100%;
+  margin: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ailab-minimap__doc > .md-content__inner::before {
+  display: none;
+}
+
+/* Inner scrollers (wide code blocks, tables) must not show their own bars. */
+.ailab-minimap__doc * {
+  overflow: hidden !important;
+  scrollbar-width: none;
+}
+
+.ailab-minimap__doc *::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hover-only affordances would render as stray marks in the miniature. */
+.ailab-minimap__doc .headerlink,
+.ailab-minimap__doc .md-annotation {
+  display: none !important;
+}
+
+.ailab-minimap__viewport {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  background-color: var(--ailab-minimap-viewport);
+  border-top: 1px solid var(--ailab-minimap-viewport-border);
+  border-bottom: 1px solid var(--ailab-minimap-viewport-border);
+  pointer-events: none;
+  will-change: transform;
+}

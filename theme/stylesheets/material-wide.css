@@ -1,0 +1,241 @@
+/*
+ * AI Build LAB - Material tab + three-column classroom layout
+ *
+ * Goal:
+ * - Top: course-level tabs such as 전체 과정, 1일차, 2일차.
+ * - Left: lesson/session navigation for the selected top tab.
+ * - Center: lesson body with generous readable width.
+ * - Right: current lesson table of contents.
+ *
+ * This file assumes Material features:
+ * - navigation.tabs
+ * - navigation.tabs.sticky
+ * - navigation.sections
+ * - toc.follow
+ *
+ * Do not enable toc.integrate when using this layout.
+ */
+
+:root {
+  --ailab-left-nav-width: 17rem;
+  --ailab-right-toc-width: 15rem;
+  --ailab-content-max-width: 1440px;
+  --ailab-content-side-padding: 1.6rem;
+}
+
+/* Material desktop breakpoint is 76.25em. Keep mobile/tablet behavior native. */
+@media screen and (min-width: 76.25em) {
+  /*
+   * Material uses .md-grid in the header, tab bar and main content.
+   * Let those containers use the full viewport so the sidebars can sit close
+   * to the screen edges and the center content can get more room.
+   */
+  .md-grid {
+    width: 100%;
+    max-width: none;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .md-header__inner,
+  .md-tabs__inner {
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+  }
+
+  .md-tabs__list {
+    margin-left: 0;
+  }
+
+  .md-main__inner {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    margin-top: 0.7rem;
+  }
+
+  .md-sidebar--primary {
+    width: var(--ailab-left-nav-width);
+    min-width: var(--ailab-left-nav-width);
+    margin-left: 0;
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+  }
+
+  .md-sidebar--secondary {
+    width: var(--ailab-right-toc-width);
+    min-width: var(--ailab-right-toc-width);
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+    order: 99;
+  }
+
+  .md-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(
+      100vw - var(--ailab-left-nav-width) - var(--ailab-right-toc-width)
+    );
+  }
+
+  .md-content__inner {
+    max-width: var(--ailab-content-max-width);
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: var(--ailab-content-side-padding);
+    padding-bottom: 3rem;
+    padding-left: var(--ailab-content-side-padding);
+  }
+
+  .md-content__inner::before {
+    height: 0;
+  }
+
+  .md-nav--primary .md-nav__title,
+  .md-nav--secondary .md-nav__title {
+    box-shadow: none;
+  }
+
+  /*
+   * Keep normal Markdown tables compact.
+   *
+   * Material wraps Markdown tables with .md-typeset__table. In the previous
+   * wide-layout override, this wrapper was forced to display:block and
+   * width:100%. That made small tables look like a huge empty card.
+   *
+   * Let the wrapper follow the actual table width by default, while still
+   * allowing horizontal scrolling when a table is wider than the content area.
+   */
+  .md-typeset__table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    vertical-align: top;
+  }
+
+  .md-typeset__table table,
+  .md-typeset table:not([class]) {
+    width: auto;
+    min-width: 0;
+  }
+
+  .md-typeset pre,
+  .md-typeset .highlight {
+    max-width: 100%;
+  }
+
+  .md-typeset img {
+    max-width: 100%;
+  }
+}
+
+@media screen and (min-width: 100em) {
+  :root {
+    --ailab-left-nav-width: 18rem;
+    --ailab-right-toc-width: 16rem;
+    --ailab-content-max-width: 1520px;
+    --ailab-content-side-padding: 2rem;
+  }
+}
+
+@media screen and (min-width: 120em) {
+  :root {
+    --ailab-left-nav-width: 19rem;
+    --ailab-right-toc-width: 17rem;
+    --ailab-content-max-width: 1680px;
+  }
+}
+
+/* Give the main body priority on medium desktop screens. */
+@media screen and (min-width: 76.25em) and (max-width: 92em) {
+  :root {
+    --ailab-left-nav-width: 15.5rem;
+    --ailab-right-toc-width: 13rem;
+    --ailab-content-side-padding: 1.2rem;
+  }
+}
+
+/*
+ * Prevent the first item in the left lesson navigation from being hidden by
+ * Material's sticky sidebar gradient/scroll mask when tabs are sticky.
+ */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary .md-sidebar__scrollwrap,
+  .md-sidebar--secondary .md-sidebar__scrollwrap {
+    padding-top: 0.65rem;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+
+  .md-sidebar--primary .md-sidebar__inner,
+  .md-sidebar--secondary .md-sidebar__inner {
+    padding-top: 0.25rem;
+  }
+
+  .md-sidebar--primary .md-nav--primary > .md-nav__list,
+  .md-sidebar--secondary .md-nav--secondary > .md-nav__list {
+    padding-top: 0.35rem;
+  }
+
+  .md-sidebar--primary .md-nav__title,
+  .md-sidebar--secondary .md-nav__title {
+    top: 0;
+    margin-top: 0;
+  }
+}
+
+/*
+ * Sidebar clipping fix
+ *
+ * When the top navigation tabs are sticky, Material keeps sidebar titles sticky
+ * and may apply scroll masks around the top of the navigation container. The
+ * selected first lesson can then look slightly cut off, especially when the
+ * active link has a strong rounded background. Give the first navigation rows
+ * real breathing room and avoid title overlays/masks covering them.
+ */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary .md-sidebar__scrollwrap,
+  .md-sidebar--secondary .md-sidebar__scrollwrap {
+    padding-top: 1rem !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+
+  .md-sidebar--primary .md-sidebar__inner,
+  .md-sidebar--secondary .md-sidebar__inner {
+    padding-top: 0.5rem !important;
+  }
+
+  .md-sidebar--primary .md-nav--primary > .md-nav__list,
+  .md-sidebar--secondary .md-nav--secondary > .md-nav__list {
+    padding-top: 0.85rem !important;
+  }
+
+  .md-sidebar--primary .md-nav__item--section > .md-nav > .md-nav__list {
+    padding-top: 0.65rem !important;
+  }
+
+  .md-sidebar--primary .md-nav,
+  .md-sidebar--primary .md-nav__list,
+  .md-sidebar--primary .md-nav__item,
+  .md-sidebar--secondary .md-nav,
+  .md-sidebar--secondary .md-nav__list,
+  .md-sidebar--secondary .md-nav__item {
+    overflow: visible;
+  }
+
+  .md-sidebar--primary .md-nav__title,
+  .md-sidebar--secondary .md-nav__title {
+    z-index: 1;
+    box-shadow: none !important;
+  }
+
+  .md-sidebar--primary .md-nav__title::before,
+  .md-sidebar--primary .md-nav__title::after,
+  .md-sidebar--secondary .md-nav__title::before,
+  .md-sidebar--secondary .md-nav__title::after {
+    display: none !important;
+  }
+}
