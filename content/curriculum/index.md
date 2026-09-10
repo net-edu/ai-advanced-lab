@@ -6,8 +6,6 @@
 
 | 링크 | 위치 | 목적 |
 |---|---|---|
-| GitHub Enterprise 로그인 | [Warm Up > GitHub 기초 - 사내 공유](../warmup/github-basics.md) | 사내 GitHub Enterprise 접속 주소(수강 전제조건). [바로가기](https://github.com/) |
-| GitHub 계정 잠금 해제(SWaC) | [Warm Up > GitHub 기초 - 사내 공유](../warmup/github-basics.md) | 로그인이 안 될 때 계정을 활성화합니다. [바로가기](https://github.com/signup) |
 | 마크다운 문법 치트시트 | [Warm Up > 마크다운 기초](../warmup/markdown.md) | 외부 마크다운 문법 참고 자료. [바로가기](https://gist.github.com/ihoneymon/652be052a0727ad59601) |
 | MCP 공식 발표 글 | [Claude Code > 외부연결 (MCP) > MCP 개념](../mcp/what-is-mcp.md) | Anthropic의 MCP 공개 발표 원문(출처 인용). [바로가기](https://www.anthropic.com/news/model-context-protocol) |
 | MCP 서버 예시 문서 | [Claude Code > 외부연결 (MCP) > MCP 개념](../mcp/what-is-mcp.md) | `claude mcp add` 명령 예시 속 원격 MCP 서버 주소. [바로가기](https://code.claude.com/docs/mcp) |
