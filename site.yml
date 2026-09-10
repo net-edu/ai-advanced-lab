@@ -6,7 +6,7 @@ site_description: MkDocs 로 만드는 문서 사이트
 # ⚠️ 사외 배포 전 실제 공개 GitHub Pages 주소로 바꾸세요.
 #    `<GITHUB_OWNER>`와 `<REPOSITORY>`를 그대로 두면 `./pipeline deploy`가 중단됩니다.
 #    형식: https://<GITHUB_OWNER>.github.io/<REPOSITORY>/
-site_url: https://<GITHUB_OWNER>.github.io/<REPOSITORY>/
+site_url: https://net-edu.github.io/ai-advanced-lab/
 
 # 헤더에서 Claude·Codex·Gemini 학습 트랙을 바꾸는 선택기를 표시합니다.
 service_switcher_enabled: false
