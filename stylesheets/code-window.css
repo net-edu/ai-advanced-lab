@@ -1,0 +1,149 @@
+/*
+ * AI Build LAB - 예시 코드/설정 파일을 에디터 창처럼 보여주는 위젯
+ *
+ * <details class="ailab-code" markdown="1"> 로 감싸고 그 안에 .ailab-code-window
+ * (가짜 에디터 창: 점 3개 타이틀바 + 실제 펜스 코드 블록)을 넣으면, 접었다
+ * 펼 수 있는 예시 파일 미리보기가 된다. markdown="1" 이 있어야 안쪽의
+ * ```lang 코드 펜스가 실제 문법 강조(pygments)를 받는다(md_in_html).
+ *
+ * claude-terminal.css(.ailab-terminal)와 자매 위젯이다 - 그쪽은 "실행한
+ * 터미널 로그"를, 이쪽은 "읽어볼 코드/설정 파일 한 장"을 보여줄 때 쓴다.
+ */
+
+.md-typeset details.ailab-code {
+  margin: 1.5rem 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: transparent;
+}
+
+.md-typeset details.ailab-code > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.5rem 1.1rem;
+  position: static;
+  list-style: none;
+  cursor: pointer;
+  background: var(--md-primary-fg-color);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.md-typeset details.ailab-code > summary:hover {
+  background: var(--md-primary-fg-color--dark, var(--md-accent-fg-color));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+}
+
+.md-typeset details.ailab-code > summary::-webkit-details-marker {
+  display: none;
+}
+
+.md-typeset details.ailab-code > summary::marker {
+  content: "";
+  display: none;
+}
+
+.md-typeset details.ailab-code > summary::before {
+  position: static;
+  width: auto;
+  height: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  background: transparent;
+  content: "</>";
+  display: inline-block;
+  color: #fff;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.md-typeset details.ailab-code > summary::after {
+  position: static;
+  width: auto;
+  height: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  background: transparent;
+  content: "▾";
+  display: inline-block;
+  margin-left: 0.15rem;
+  transition: transform 0.15s ease;
+}
+
+.md-typeset details.ailab-code[open] > summary::after {
+  transform: rotate(-180deg);
+}
+
+/* --- 에디터 창 본체 --- */
+
+.md-typeset details.ailab-code .ailab-code-window {
+  margin-top: 0.6rem;
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.md-typeset details.ailab-code .ailab-code-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  background: var(--md-default-fg-color--lightest);
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset details.ailab-code .ailab-code-dots {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex: none;
+}
+
+.md-typeset details.ailab-code .ailab-code-dots span {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.md-typeset details.ailab-code .ailab-code-dots span:nth-child(1) {
+  background: #ff5f56;
+}
+
+.md-typeset details.ailab-code .ailab-code-dots span:nth-child(2) {
+  background: #ffbd2e;
+}
+
+.md-typeset details.ailab-code .ailab-code-dots span:nth-child(3) {
+  background: #27c93f;
+}
+
+.md-typeset details.ailab-code .ailab-code-filename {
+  font-family: var(--md-code-font-family, ui-monospace, monospace);
+  font-size: 0.72rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* 위젯 안의 펜스 코드 블록은 카드 여백에 바로 붙게, 둥근 모서리는 위쪽만 없앤다 */
+.md-typeset details.ailab-code .ailab-code-window .highlight {
+  border-radius: 0;
+  margin: 0;
+}
+
+.md-typeset details.ailab-code .ailab-code-window .highlight pre {
+  border-radius: 0;
+}

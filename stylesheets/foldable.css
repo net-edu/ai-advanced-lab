@@ -1,0 +1,84 @@
+/* `{ .foldable }` 로 표시한 이미지를 접고 펼치는 위젯.
+   tools/mkdocs_hooks.py 가 `![alt](path){ .foldable }` 를 아래 구조로 바꾼다.
+
+     <details class="ailab-foldable admonition note">
+       <summary>alt</summary>
+       <img alt="alt" src="path">
+     </details>
+
+   `admonition note` 조합 덕에 테두리·배경·좌측 강조선은 leeum-editorial.css 의
+   일반 admonition 규칙(잉크 헤어라인 톤)을 그대로 물려받는다. 다만 `<summary>`
+   는 `.admonition-title` 이 아니라 네이티브 `<summary>` 태그라 그쪽 전용 규칙
+   (아이콘 숨김·패딩 재정의)은 적용되지 않는다 - 아래에서 Material 기본 note
+   색(파랑 아이콘·화살표)을 직접 무력화한다. */
+
+/* Material 기본 note 색(#448aff)을 없애고 다른 note/tip admonition과 같은
+   잉크 톤으로 맞춘다. */
+.md-typeset details.ailab-foldable.note {
+  margin: 2rem 0;
+  padding: 0;
+  border-color: var(--ailab-rule);
+}
+
+.md-typeset details.ailab-foldable.note:focus-within {
+  box-shadow: none;
+}
+
+/* summary를 독립 헤더로 만들고 flex 정렬로 텍스트와 화살표를 중앙에 둔다.
+   일반 admonition의 본문 여백이 남아 제목이 아래로 밀리는 것을 막는다. */
+.md-typeset .ailab-foldable.note > summary {
+  display: flex;
+  align-items: center;
+  min-height: 3.9rem;
+  margin: 0;
+  padding: 0.8rem 3rem 0.8rem 1.5rem;
+  color: var(--ailab-ink);
+  border: 0;
+  line-height: 1.45;
+}
+
+.md-typeset .ailab-foldable.note > summary::before {
+  display: none;
+}
+
+.md-typeset .ailab-foldable.note > summary::after {
+  top: 50%;
+  right: 1.25rem;
+  color: var(--ailab-ink);
+  transform: translateY(-50%);
+}
+
+.md-typeset .ailab-foldable.note[open] > summary::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* glightbox가 이미지를 링크로 감싸도, 이미지 여백과 폭을 유지한다. */
+.md-typeset .ailab-foldable > img {
+  display: block;
+  max-width: calc(100% - 2.5rem);
+  margin: 0.9rem auto 1.25rem;
+}
+
+.md-typeset .ailab-foldable > .glightbox {
+  display: block;
+  margin: 0;
+  padding: 0.9rem 1.25rem 1.25rem;
+}
+
+.md-typeset .ailab-foldable > .glightbox > img {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+ screen and (max-width: 44.984375em) {
+  .md-typeset .ailab-foldable.note > summary {
+    min-height: 3.5rem;
+    padding-left: 1rem;
+    padding-right: 2.6rem;
+  }
+
+  .md-typeset .ailab-foldable.note > summary::after {
+    right: 0.9rem;
+  }
+}

@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stage6 MCP 연동 하네스 - 내부 동작 (가로 흐름)</title>
+<script src="vendor/cytoscape.min.js"></script>
+<style>
+  :root{
+    --ink:#1a1a1a; --line:#e2e2e2; --panel:#fafafa; --accent:#d97757;
+    --c-input:#e8862a;  --c-input-bg:#fff4e8;
+    --c-data:#33a852;   --c-data-bg:#eefaf2;
+    --c-unstr:#9b59b6;  --c-unstr-bg:#f6eefb;
+    --c-output:#5b6b7f; --c-output-bg:#eef1f5;
+    --c-informal:#4a7dff; --c-informal-bg:#eef3ff;
+    --c-formal:#12a5a5; --c-formal-bg:#e6f7f7;
+    --c-gate:#d4a017;   --c-gate-bg:#fdf6e3;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden;background:#fff;color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;}
+  #app{display:flex;flex-direction:column;height:100%;}
+  header{padding:10px 18px;border-bottom:1px solid var(--line);flex:0 0 auto;}
+  header h1{margin:0;font-size:19px;font-weight:800;}
+  header p{margin:3px 0 0;font-size:14px;color:#555;}
+  header .ins{color:var(--accent);font-weight:700;}
+  main{flex:1 1 auto;display:flex;min-height:0;}
+  .col{min-height:0;display:flex;flex-direction:column;}
+  .left{flex:1;border-right:1px solid var(--line);background:var(--panel);}
+  .mid{flex:2;position:relative;background:#fff;}
+  .right{flex:1;border-left:1px solid var(--line);display:flex;flex-direction:column;background:#fff;}
+  .phead{padding:9px 14px;font-size:15px;font-weight:800;border-bottom:1px solid var(--line);
+    background:#fff;flex:0 0 auto;}
+  /* context stack */
+  .ctxwrap{overflow-y:auto;padding:12px;flex:1;}
+  .ctxitem{border:1px solid var(--line);border-left-width:7px;border-radius:8px;
+    padding:9px 12px;margin-bottom:9px;font-size:15px;background:#fff;line-height:1.35;
+    transition:box-shadow .2s;}
+  .ctxitem small{display:block;color:#888;font-size:12px;margin-top:2px;}
+  .ctxitem.newest{box-shadow:0 0 0 3px rgba(217,119,87,.28);border-color:var(--accent);}
+  .ctxcount{font-size:13px;color:#888;padding:2px 4px 10px;}
+  /* flow overlays */
+  #flow{position:absolute;inset:0;}
+  .ctrl{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;
+    display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.94);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);}
+  .ctrl button{font-size:17px;border:1px solid var(--line);background:#fff;border-radius:999px;
+    width:40px;height:40px;cursor:pointer;line-height:1;}
+  .ctrl button.play{background:var(--accent);color:#fff;border-color:var(--accent);width:46px;}
+  .ctrl button.fit{width:auto;padding:0 14px;font-size:14px;font-weight:700;color:#333;}
+  .ctrl button.fit:hover{background:#f3f4f6;}
+  .ctrl button:disabled{opacity:.4;cursor:default;}
+  .ctrl .ind{font-size:15px;font-weight:700;min-width:56px;text-align:center;}
+  #dragHint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+    background:rgba(255,255,255,.9);border:1px solid #ddd;border-radius:999px;
+    padding:6px 16px;font-size:13px;color:#666;pointer-events:none;z-index:5;
+    box-shadow:0 1px 6px rgba(0,0,0,.05);}
+  .gatebtn{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:20;
+    display:none;background:var(--c-gate-bg);border:1px solid var(--c-gate);color:#7a5b00;
+    font-size:15px;font-weight:700;border-radius:999px;padding:9px 18px;cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);}
+  .legend{position:absolute;right:12px;top:12px;z-index:20;background:rgba(255,255,255,.95);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);max-width:230px;}
+  .legend b{font-size:13px;color:#666;display:block;margin:6px 0 4px;font-weight:700;}
+  .legend .row{display:flex;align-items:center;gap:7px;margin:3px 0;line-height:1.2;}
+  .legend .dot{width:16px;height:16px;border-radius:5px;flex:0 0 auto;border:2px solid;}
+  /* tree + viewer */
+  .tree{flex:0 0 36%;overflow:auto;padding:8px 6px;border-bottom:1px solid var(--line);font-size:14px;}
+  .tnode{padding:2px 6px;border-radius:6px;white-space:nowrap;cursor:pointer;line-height:1.5;}
+  .tnode.dir{color:#555;font-weight:700;cursor:default;}
+  .tnode.file:hover{background:#f0f0f0;}
+  .tnode .act{font-size:11px;font-weight:800;border-radius:4px;padding:0 5px;margin-left:6px;}
+  .tnode.hl-read .act{background:#e6f0ff;color:#2a5fd0;}
+  .tnode.hl-write .act{background:#fff0e6;color:#c9631a;}
+  .tnode.hl-run .act{background:#e6f7f7;color:#0a7d7d;}
+  .tnode.active{background:#fff3ee;box-shadow:inset 0 0 0 2px var(--accent);font-weight:700;}
+  .tnode.touched{background:#f7f7f7;}
+  .viewer{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+  .vtabs{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid var(--line);
+    flex:0 0 auto;overflow:auto;}
+  .vtab{font-size:12px;border:1px solid var(--line);background:#fff;border-radius:6px;
+    padding:3px 8px;cursor:pointer;white-space:nowrap;}
+  .vtab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .vbody{flex:1 1 auto;overflow:auto;margin:0;padding:12px 14px;font-size:13px;line-height:1.5;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;white-space:pre-wrap;
+    word-break:break-word;background:#fff;}
+  /* detail band */
+  footer{flex:0 0 auto;border-top:1px solid var(--line);padding:11px 18px;background:#fff;
+    max-height:30vh;overflow:auto;}
+  .band-title{font-size:17px;font-weight:800;margin-bottom:4px;}
+  .band-note{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+  .band-desc{font-size:15px;line-height:1.5;margin:0 0 5px;}
+  .band-why{font-size:14px;line-height:1.5;color:#444;background:#f7f7f7;border-left:4px solid #ccc;
+    padding:7px 11px;border-radius:0 8px 8px 0;}
+  .insight{border:2px solid var(--accent);background:#fff6f2;border-radius:12px;padding:12px 16px;}
+  .insight .k{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.05em;}
+  .insight .t{font-size:15px;line-height:1.55;margin-top:5px;}
+  .actor{font-size:12px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px;}
+  .actor.human{background:#fdf6e3;color:#7a5b00;}
+  .actor.ai{background:#eef3ff;color:#2a5fd0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>stage6 · MCP 연동 하네스 - 내부 동작 (NVIDIA 적정가치 판단)</h1>
+    <p>financial-datasets 실시간 조회(성공/폴백 분기) → TTM 역산 → 리포트 작성 → <span class="ins">이중 오라클(subagent 동기 + Stop hook 자동, 서로 다른 시점)</span> → 실패 시 루프백 → 파일 공유</p>
+  </header>
+  <main>
+    <section class="col left">
+      <div class="phead">🧠 컨텍스트에 쌓인 것</div>
+      <div class="ctxwrap"><div id="ctxlist"></div><div class="ctxcount" id="ctxcount"></div></div>
+    </section>
+    <section class="col mid">
+      <div id="flow"></div>
+      <div class="ctrl">
+        <button id="rew" title="이전(←)">◀</button>
+        <button id="play" class="play" title="재생/일시정지">⏵</button>
+        <button id="fwd" title="다음(→)">▶</button>
+        <span class="ind" id="ind">0 / 0</span>
+        <button id="fit" class="fit" title="전체 보기(축소해서 흐름 전체 보기)">🔍 전체</button>
+      </div>
+      <button class="gatebtn" id="gate">⏸ 사람 개입 지점 - “진행” 클릭</button>
+      <div class="legend" id="legend"></div>
+      <div id="dragHint">💡 노드를 드래그하면 위치를 옮길 수 있어요</div>
+    </section>
+    <section class="col right">
+      <div class="phead">📁 프로젝트 트리 (활성 노드 파일 강조)</div>
+      <div class="tree" id="tree"></div>
+      <div class="viewer">
+        <div class="vtabs" id="vtabs"></div>
+        <pre class="vbody" id="vbody">노드를 클릭하면 그 노드가 참조하는 실제 파일 원문이 여기 표시됩니다.</pre>
+      </div>
+    </section>
+  </main>
+  <footer id="band"></footer>
+</div>
+
+<!-- ===== 실제 파일 원문 임베드 (raw text; HTML 파싱 안 됨) ===== -->
+<script type="text/plain" data-path="CLAUDE.md">
+# NVIDIA 적정가치 판단 프로젝트 - 분석 표준 (stage6: MCP 연동 - 실시간 수집 + 업무 워크플로우)
+
+이 프로젝트는 stage3-5과 같은 과제(한 종목이 저평가/적정/고평가인지 판단)를 쓰되,
+**정형 데이터의 원천을 정적 파일에서 실시간 MCP 조회로 바꾸고**, 완성된 리포트를 **파일 공유로
+실제 업무 워크플로우(메일 발송)에 얹는다**.
+
+## stage5 대비 무엇이 바뀌었나
+| 항목 | stage3-5 | stage6 |
+| 재무 데이터 원천 | data/financials.json (정적, FY2026 연간) | financial-datasets 실시간 조회 (분기, 실패 시 폴백) |
+| hook의 검증 방식 | 리포트 값을 고정된 정답과 대조 | 리포트가 스스로 인용한 원자료로부터 내부 일관성을 재계산해 대조 - 정답 파일이 없다 |
+| 새 필수 규율 | - | '데이터 출처:' 마커(실시간/폴백) + 실시간이면 SEC accession 번호 인용 |
+| 산출물 이후 단계 | 리포트 작성으로 끝 | 파일 공유로 완성 리포트 메일 발송까지 확장 |
+
+## 정형 데이터 수집 절차 (신규 - 이 단계의 핵심)
+1. 1차: 실시간 조회 시도. mcp__financial-datasets__get_financials(ticker=NVDA,
+   metrics=[Revenues,OperatingIncomeLoss,NetIncomeLoss,EarningsPerShareDiluted], fiscal_periods=8)
+2. 최근 분기(당기) 표준화: start_date~end_date가 정확히 3개월인 가장 최근 구간을 "당기 분기",
+   같은 3개월짜리 전년 동기 구간을 "전기 분기"로. end_date로 실제 분기를 식별한다.
+3. TTM(직전 4개 분기 합산) 역산: 응답 값은 회계연도 시작부터의 누적치(YTD)가 섞여 있다.
+   표준 분기값 = 해당 구간 누적치 − 직전 구간 누적치. 최근 4개 표준 분기 합 = TTM.
+4. 주가는 MCP가 주지 않는다: 주가·시총은 data/financials.json 시장 블록(정적)을 쓴다 -
+   이건 폴백이 아니라 이 MCP의 커버리지 밖.
+5. 실시간 조회 실패 시(사내망 등) → 즉시 data/financials.json(FY2026 연간)으로 전환.
+
+## 데이터 출처 마커 (검증 스크립트가 이 줄을 읽는다)
+- 실시간 성공: 데이터 출처: 실시간 조회(MCP) - financial-datasets get_financials(ticker=NVDA),
+  accession 0001045810-26-000052, filed 2026-05-20
+- 폴백: 데이터 출처: 정적 스냅샷(폴백) - data/financials.json(FY2026 10-K) + 폴백 사유: <이유>
+
+## 이 단계의 진짜 교육 포인트
+- stage3-5 hook은 "이미 정해진 하나의 정답"(정적 파일)과 리포트 값을 대조했다.
+- stage6는 정형 데이터 자체가 조회 시점마다 달라질 수 있다. hook이 검증할 수 있는 최선은
+  더 이상 "정답과 일치하는가"가 아니라 "스스로 인용한 원자료로부터 올바르게 계산했는가 +
+  그 원자료가 무엇인지 밝혔는가"다. 판정 기준의 형식지화가 한 번에 끝나는 일이 아니라,
+  데이터가 살아있는 한 검증 방식 자체도 계속 다시 설계해야 하는 유지보수 작업임을 보여준다.
+
+## 워크플로우 (loop)
+1. financial-datasets get_financials로 NVDA 최근 8개 구간 조회 → 최근 분기·TTM 역산 (실패 시 폴백)
+2. raw/(비정형) 읽기 → /fair-value-report NVIDIA → reports/fair-value.md
+3. fair-value-reviewer subagent로 정성·종합·범위밖 근거 채점 (Skill 내 동기 호출)
+4. Claude가 한 턴 응답을 마칠 때마다 → 자동 Stop hook 트리거:
+   scripts/validate_fair_value.py 자동 실행 → 형식·데이터출처 마커·정량 지표 내부 일관성·
+   미래 예상 가정 범위 검증. 통과=조용히 진행, 실패=stderr 사유 → Claude가 리포트 재작성.
+   Ctrl+C(사용자 인터럽트)에는 반응하지 않는다.
+5. hook 통과 + 리뷰어 PASS 되면 /리포트 공유로 파일 공유 메일 발송
+</script>
+
+<script type="text/plain" data-path=".claude/settings.json">
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/validate_fair_value.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+</script>
+
+<script type="text/plain" data-path=".claude/skills/fair-value-report/SKILL.md">
+---
+name: fair-value-report
+description: financial-datasets로 NVIDIA 최근 분기 재무 데이터를 실시간 조회(실패 시 폴백)하고,
+raw/의 리포트·뉴스(비정형)와 종합해 reports/fair-value.md에 적정가치 판단 리포트를 만든다.
+---
+
+# 적정가치 판단 리포트 작성 (실시간 MCP 조회 + 정형+비정형 종합 + 이중 오라클)
+
+## Skill 내 진행 (Claude 응답 도중)
+1. 실시간 정형 데이터 조회: mcp__financial-datasets__get_financials(ticker=NVDA,
+   metrics=[Revenues,OperatingIncomeLoss,NetIncomeLoss,EarningsPerShareDiluted], fiscal_periods=8)
+   - 성공: end_date가 최근인 3개월짜리 구간(당기)과 전년 동기(전기)를 골라 TTM 역산.
+   - 실패(도구 오류·타임아웃): data/financials.json으로 전환하고 이유를 기록('폴백 사유:').
+2. 주가: data/financials.json의 시장.주가 (모드 무관 - financial-datasets는 시세 미제공).
+3. 비정형 읽기: raw/뉴스-*.md·raw/애널리스트-*.md·raw/적정가-가정-*.md에서 성장성·리스크·
+   목표주가·적정가 가정을 뽑는다. 긍정/우려 요인 균형, 출처 인라인.
+4. 정형 지표 계산: (실시간) TTM 주당순이익·주가배수, 최근 분기 YoY, 영업이익률을 직접 계산.
+5. 종합 판정: 정량 신호 + 정성(미래 예상 가정)을 종합해 저평가/적정/고평가 중 하나.
+6. 리포트 작성: 필수 섹션 순서대로 reports/fair-value.md. 실시간 모드면
+   '### 최근 분기 재무 데이터'·'### TTM 주당순이익 역산' 표 포함 + '데이터 출처:' 마커.
+7. 비정형(정성) 채점 - Reviewer subagent: 작성 후 .claude/agents/fair-value-reviewer.md를
+   동기적으로 호출해 채점. PASS(>=9/16)/FAIL. → 이 Skill 내에서 블로킹으로 나온다.
+
+## 이중 오라클의 두 번째 단계 (Claude 응답 종료 직후 - 자동 Stop hook)
+8. 정형(결정론) 검증 - Stop hook: Claude가 1~7을 마치고 응답을 종료하자마자(사용자 인터럽트
+   제외) settings.json의 Stop hook이 자동 실행 → scripts/validate_fair_value.py.
+   결과: exit 0(통과) / exit 2(실패, stderr에 사유).
+
+## 통과 조건 (양쪽 모두 만족해야 진행)
+- Reviewer PASS(>=9/16) AND Hook exit 0
+- 하나라도 실패하면: Claude가 stderr/reviewer 피드백을 받아 리포트를 재작성 → 6번부터 반복(루프).
+
+## 검증 통과 후
+- 사용자가 /리포트 공유 호출 → 리포트 공유 SKILL → 파일 공유 mail_send로 메일 발송.
+</script>
+
+<script type="text/plain" data-path=".claude/agents/fair-value-reviewer.md">
+---
+name: fair-value-reviewer
+description: reports/fair-value.md의 비정형 파트(정성 분석·종합 판정·범위 밖 근거)를 채점하는
+리뷰어. 정형 지표·미래 예상 가정의 범위 준수는 hook이 이미 검증하므로, 이 subagent는 hook이
+판정할 수 없는 주관 영역만 본다.
+tools: Read, Grep, Glob
+---
+
+# 적정가치 리포트 리뷰어 (LLM-as-judge, 비정형 전담)
+
+너는 까다로운 리서치 심사역이다. 결정론 hook(validate_fair_value.py)이 이미 형식·정량 지표
+재계산과 "미래 예상 가정이 적정 범위 안인가"까지 검사했다. 너는 hook이 판정할 수 없는
+주관 영역만 채점한다.
+
+## 무엇을 채점하나 (항목당 0~4점)
+1. 정성 분석 균형 - 긍정 요인·우려 요인 각각 최소 2개, 각 논거에 raw/ 인라인 출처가 있는가?
+2. 정량↔정성 종합 일관성 - 종합 판정이 정량+정성(미래 예상 가정)을 둘 다 반영하는가?
+3. 미래 예상 가정의 명시성 - 결론이 판정을 좌우한 가정(목표 주가배수·성장률)을 구체적으로?
+4. 범위 밖 근거의 설득력 - 가정이 범위 밖이면('적정범위 밖 근거:' 마커), golden-reports/의
+   어떤 시나리오보다 강하거나 다른 논리로 정당화되는가? 막연한 낙관이면 감점.
+
+## 출력 형식
+항목1 정성 균형: X/4 ...
+합계: XX/16 → PASS(>=9) / FAIL
+개선 지시: <미달 항목별 실행 가능한 지시>
+
+## 원칙
+- 정형(지표 계산·형식·범위 준수)은 hook의 몫이니 재검하지 말고, 정성 판단의 질에 집중.
+</script>
+
+<script type="text/plain" data-path="scripts/validate_fair_value.py">
+#!/usr/bin/env python3
+"""
+stage6 적정가치 리포트 검증기 - 정형(결정론) 파트. Claude Code Stop hook으로 실행된다.
+reports/fair-value.md를 검사:
+  - 필수 섹션 + '## 출처' + 인라인 출처 + 플레이스홀더 없음 (형식, stage3-5과 동일)
+  - '## 종합 판정' 본문에 저평가/적정(중립)/고평가 중 하나
+  - 미래 예상 가정(목표 주가배수·장기 이익 성장률)이 data/assumptions.json 적정 범위 안인지.
+    범위 밖이면 '적정범위 밖 근거:' 마커 필수
+  - ★ [stage6] '데이터 출처:' 마커로 모드(실시간/폴백)를 판별하고, 고정된 정답 파일이 아니라
+    리포트가 스스로 인용한 원자료로부터 지표를 재계산해 내부 일관성을 검증:
+    - 실시간(MCP): 분기 표 2행 + TTM 합계로 5개 지표 재계산 대조 + accession·filed 확인.
+    - 폴백: data/financials.json으로 재계산 대조 + '폴백 사유:' 존재 확인.
+하나라도 실패하면 사유를 stderr로 내고 exit 2 → Claude가 종료를 못 하고 고치게 된다.
+"""
+REQUIRED_SECTIONS = ["종목 개요", "정량 분석", "정성 분석", "종합 판정", "결론"]
+ACCESSION_RE = r"\d{10}-\d{2}-\d{6}"
+QUARTER_ROW_RE = r"\|\s*FY\d{4}\s*Q\d[^|]*\|\s*([\d,]+)\s*\|\s*([\d,]+)\s*\|\s*([\d,]+)\s*\|\s*([\d.]+)\s*\|"
+TTM_TOTAL_RE   = r"\*\*TTM\s*합계\*\*\s*\|\s*\*\*([\d.]+)\*\*"
+
+def compute_metrics_live(rows, ttm_eps, price):
+    """실시간 모드: 리포트 자신이 인용한 분기 표 2행 + TTM 합계로부터 재계산(내부 일관성)."""
+    current, prior = rows[0], rows[1]
+    rev_growth = (current[0] - prior[0]) / prior[0] * 100
+    opm        = current[1] / current[0] * 100
+    ni_growth  = (current[2] - prior[2]) / prior[2] * 100
+    per        = price / ttm_eps
+    return { "주당순이익": f"{ttm_eps:.2f}", "주가배수": f"{per:.1f}",
+             "매출증가율": f"{rev_growth:.1f}", "영업이익률": f"{opm:.1f}",
+             "순이익증가율": f"{ni_growth:.1f}" }
+
+def check_data_source(text, failures):
+    ds = re.search(r"데이터\s*출처:\s*(.+)", text)
+    if not ds:
+        failures.append("'데이터 출처:' 마커가 '## 출처' 섹션에 없음"); return
+    line = ds.group(1)
+    if "실시간 조회(MCP)" in line:
+        if not re.search(ACCESSION_RE, text):
+            failures.append("실시간 모드인데 SEC accession 번호 인용이 없음")
+        rows = parse_quarter_rows(text)                 # 당기/전기 분기 2행
+        ttm_eps = float(TTM_TOTAL_RE.search(text).group(1))
+        price = json.load(open(FIN_PATH))["시장"]["주가"]
+        m = compute_metrics_live(rows, ttm_eps, price)  # ← 리포트 원자료로 재계산
+        for name, val in m.items():
+            if val not in text:
+                failures.append(f"{name} 값 불일치 - 재계산값 '{val}'이(가) '## 정량 분석'에 없음")
+    elif "정적 스냅샷(폴백)" in line:
+        if "폴백 사유:" not in text:
+            failures.append("폴백 모드인데 '폴백 사유:' 설명이 없음")
+        # data/financials.json으로 재계산 대조 (stage3-5과 동일)
+    # exit 2 시 Claude가 stderr 사유를 받아 리포트를 다시 고친다(루프).
+
+# stop_hook_active 재진입 시 exit 0 (무한루프 방지)
+</script>
+
+<script type="text/plain" data-path="data/financials.json">
+{
+  "_note": "[stage6] 이 파일은 이제 원천이 아니라 폴백(fallback) 스냅샷이다 - financial-datasets
+   실시간 조회가 실패했을 때만 쓴다. 실제 데이터(가상 아님). 정형 원천 = NVIDIA Corp 10-K
+   (FY2026, 회계연도 종료 2026-01-25, SEC EDGAR CIK 0001045810). 주가·시총 = stockanalysis.com(2026-08-20).",
+  "_data_noise": "stockanalysis.com은 TTM 기준 주가배수를 33.2배로 표기하나, FY2026 연간
+   주당순이익($4.90)으로 계산하면 44.3배 - 어느 기간을 기준으로 삼느냐에 따라 다르다.",
+  "종목코드": "NVDA",
+  "시장": { "주가": 216.85, "주가_기준일": "2026-08-20", "시가총액_십억달러": 5250 },
+  "주당순이익_달러": { "FY2026": 4.90, "FY2025": 2.94 },
+  "current": { "매출액": 215938, "영업이익": 130387, "당기순이익": 120067 },
+  "prior":   { "매출액": 130497, "당기순이익": 72880 }
+}
+</script>
+
+<script type="text/plain" data-path="data/assumptions.json">
+{
+  "_note": "assumptions-bands.md의 기계 판독용 거울. golden-reports/ 5건에서 역산한 미래 예상
+   가정의 적정 범위.",
+  "종목": "NVIDIA",
+  "derived_from": "golden-reports/ 5개 리포트 역산",
+  "target_pe":  { "min": 18.0, "max": 35.0 },
+  "growth_pct": { "min": 20.0, "max": 44.0 }
+}
+</script>
+
+<script type="text/plain" data-path="raw/뉴스-NVIDIA-2026Q2전망.md">
+# [뉴스/실적 전망] NVIDIA 2026Q2(FY2027 Q2) 실적·업황 (실제 출처 기반 발췌)
+> 실제 데이터. 조회 시점(2026-08-20/21) 기준 아직 발표 전인 예상치다(실제 실적 아님).
+
+## 실적 발표 일정
+- FY2027 Q2(2026년 5~7월 분기) 실적 발표: 2026-08-26 예정.
+
+## 실적 예상치 (아직 확정 실적 아님)
+- 회사 자체 전망: 매출 약 $91.0B ± 2%.
+- 애널리스트 40인 평균: 매출 $91.85B, 주당순이익 $2.08.
+- 데이터센터용 매출 $25B+ 예상 - Blackwell(차세대 칩) 생산 확대가 관전 포인트.
+
+## FY2026(직전 회계연도, 2026-01-25 마감) 확정 실적 - data/financials.json 원천
+- 매출 $215.9B(+65%), 영업이익 $130.4B, 순이익 $120.1B(+65%).
+
+## 우려 요인 배경
+- 구글 TPU/아마존 Trainium/MS 커스텀 가속기 등 맞춤형 반도체 확산
+  (2025년 20.9% → 2026년 27.8%, 2028년 데이터센터 연산 37%까지 전망).
+- AMD MI300 시리즈 가격 대비 성능 도전, AMD 2026년 주당순이익 +64% 자체 전망.
+</script>
+
+<script type="text/plain" data-path="raw/애널리스트-의견-2026.md">
+# [애널리스트] NVIDIA 목표주가·투자의견 요약 (실제 출처 기반 발췌)
+
+## 목표주가·투자의견 (매수 우세, 목표가 편차 큼)
+- 애널리스트 61명 평균 의견 "적극 매수", 평균 목표주가 $304.64~$305.86.
+- 61명 중 최고 $500 / 최저 $250.
+
+## ★ 현재가($216.85)는 애널리스트 중 가장 낮은 목표가($250)보다도 낮다
+- NVIDIA는 애널리스트 61명의 목표주가가 전부($250~$500) 현재가보다 높다.
+  다만 현재 실적 기준 주가배수(PER 33~44배)는 절대적으로 보면 비싸 보인다.
+
+## 미래 실적을 반영한 주가배수
+- 미래 예상 실적 기준 주가배수 34.2배 - 반도체 업종 평균보다 89% 높은 수준.
+- 2026년 달력연도 기준 미래 예상 주가배수 약 29배.
+- 애널리스트들은 3년 뒤에도 순이익·매출 성장률 25~30%대를 예상.
+
+## 우려 요인
+- 맞춤형 반도체 확산, AMD 경쟁 심화, 높은 주가배수의 위험.
+</script>
+
+<script type="text/plain" data-path="raw/적정가-가정-2026.md">
+# [적정가 가정] NVIDIA 미래 예상 가정 (실제 리서치 발췌 - golden-reports/의 재료)
+- Simply Wall St 계산모델: 적정가 $268.22 (미래 예상 주가배수 28.93배·성장률 37.36% 가정).
+- 애널리스트 평균: 목표 주가배수 ~29배, 장기 성장률 27.5%.
+- 최고 낙관 시나리오: 주가배수 34.2배, 성장률 43.87% (AI 슈퍼사이클, 프리미엄 유지).
+- 학술 보수적 모델: 주가배수 18.1배, 성장률 20.0% (프리미엄 소멸·성숙기 진입).
+※ 이 견해차의 폭이 assumptions-bands.md에서 역산된 적정 범위(18~35배, 20~44%)의 근거다.
+</script>
+
+<script type="text/plain" data-path="assumptions-bands.md">
+# 판정 가정 적정 범위 - golden-reports/에서 역산 (암묵지 형식지화, 이 stage의 페이로드)
+
+golden-reports/ 5개 리포트가 NVIDIA에 대해 쓴 미래 예상 가정(목표 주가배수·성장률)을 대조해
+정상 범위를 직접 역산했다. stage4의 지표 계산은 이미 공식이 있던 것을 옮겨 담은 것이지만,
+이 범위는 아무도 정해주지 않은 것을 golden에서 역산해 형식지화한 것이다.
+
+## 역산한 정상 범위 (채택값)
+| 가정 | 관측 범위 | 채택 범위 |
+| 목표 주가배수 | 18.1 ~ 34.2배 | 18.0 ~ 35.0배 |
+| 장기 성장률   | 20.0 ~ 43.87% | 20.0 ~ 44.0% |
+
+## 함정 (형식지화는 판단을 없애는 게 아니다)
+- 범위 밖 가정도 정당한 근거가 있으면 유효하다 - 범위는 기본값을 준다.
+- 그래서 오라클은 두 겹이다: hook이 범위를 기본값으로 강제하고(범위 밖이면 근거 요구),
+  fair-value-reviewer subagent가 그 근거가 설득력 있는지 판정한다.
+
+## REVEAL
+- stage4 지표 계산 = 이미 공식이 있던 것을 hook에 옮겨 담음.
+- stage5 가정 범위 = golden 리포트에서 직접 역산해 형식지화.
+- 둘 다 "판정 기준을 형식지화"라는 같은 작업. 차이는 남이 해놨나 / 내가 해야 하나뿐.
+</script>
+
+<script type="text/plain" data-path="reports/fair-value.md">
+# NVIDIA(NVDA) 적정가치 판단 리포트
+
+## 종목 개요
+- 종목명: NVIDIA Corporation (NVDA)
+- 기준일: 2026-08-20 (주가), 재무데이터는 2026-05-20 제출 10-Q(FY2027 Q1) 기준
+- 현재 주가: $216.85 [출처: stockanalysis.com/stocks/nvda]
+- 시가총액: 약 $5,250B [출처: seekingalpha.com]
+
+### 최근 분기 재무 데이터
+financial-datasets로 실시간 조회한 SEC 10-Q 원자료(단위: 백만달러, EPS는 달러):
+| 구분 | 매출액 | 영업이익 | 당기순이익 | 희석주당이익 |
+| FY2027 Q1 (2026-04-26 마감)          | 81,615 | 53,536 | 58,321 | 2.39 |
+| FY2026 Q1 (2025-04-27 마감, 전년동기) | 44,062 | 21,638 | 18,775 | 0.76 |
+
+### TTM 주당순이익 역산
+표준 분기값 = 해당 구간 누적치 − 직전 구간 누적치로 역산 후 최근 4개 분기 합산:
+| 분기 | 표준화 EPS |
+| FY2026 Q2 (표준) | 1.08 |
+| FY2026 Q3 (표준) | 1.30 |
+| FY2026 Q4 (표준) | 1.76 |
+| FY2027 Q1 (표준) | 2.39 |
+| **TTM 합계** | **6.53** |
+
+## 정량 분석 (정형)
+| 지표 | 값 | 계산 근거 |
+| 주당순이익(EPS, TTM)      | $6.53  | 위 4개 표준 분기 합산 |
+| 주가배수(PER, TTM)        | 33.2배 | $216.85 ÷ $6.53 |
+| 매출 증가율(최근 분기 YoY) | 85.2%  | (81,615 − 44,062) ÷ 44,062 |
+| 영업이익률(최근 분기)      | 65.6%  | 53,536 ÷ 81,615 |
+| 순이익 증가율(최근 분기 YoY)| 210.6% | (58,321 − 18,775) ÷ 18,775 |
+
+TTM 주가배수 33.2배는 data/financials.json _data_noise가 인용한 stockanalysis.com의 TTM
+표기와 직접 계산으로 정확히 일치한다 - 같은 회사가 지난 4개 분기 공시를 직접 쌓아 재현한 결과다.
+
+## 정성 분석 (비정형)
+**긍정 요인**
+- 최근 분기 매출 YoY +85.2%, 순이익 YoY +210.6% 고성장, 데이터센터가 성장 핵심 축
+  [출처: rexshares.com/nvidia-earnings].
+- 애널리스트 61명 평균 "적극 매수", 평균 목표주가 $304~$306 [출처: S&P Global 집계].
+- 애널리스트 61명의 목표주가가 최저($250)조차 현재가($216.85)보다 높다
+  [출처: raw/애널리스트-의견-2026.md].
+- Simply Wall St 모델 적정가 $268.22 [출처: simplywall.st].
+**우려 요인**
+- TTM 33.2배(연간 44.3배)는 절대 수준으로 이미 비싸다 [출처: tipranks.com].
+- 맞춤형 반도체(구글 TPU/아마존/MS) 확산 [출처: fool.com].
+- AMD MI300 경쟁 심화 [출처: 검색 종합].
+- 높은 주가배수는 성장 완벽 지속 전제 - 기대치가 꺾이면 배수 하락 위험 [출처: tipranks.com].
+
+## 종합 판정
+**저평가**로 판단한다. 현재가가 애널리스트 61명의 최저 목표주가($250)보다도 낮고, 독립 모델
+적정가($268.22)도 현재가보다 높으며, 최근 분기 실적(+85.2% 매출·+210.6% 순이익)이 이를 뒷받침한다.
+다만 TTM 33.2배가 이미 업종 평균보다 높아 성장률이 20%대 초반 이하로 꺾이면 "고평가"로 뒤집힐
+수 있는 조건부 판정이다.
+
+## 결론
+NVIDIA는 현재 실적 기준으로는 비싸지만 목표주가·독립 모델 적정가가 모두 현재가를 상회하고
+최근 분기 성장세가 그 가정을 뒷받침해 **저평가**로 판단한다. 핵심 리스크는 자체 칩·AMD 경쟁.
+
+### 판정 근거 미래 예상 가정
+- 목표 주가배수: 29.0배
+- 장기 이익 성장률: 27.5%
+(애널리스트 평균 관측치 채택. 적정 범위(18.0~35.0배, 20.0~44.0%) 안.)
+
+## 출처
+- financial-datasets get_financials(ticker=NVDA) 실시간 조회 (SEC EDGAR XBRL, CIK 1045810)
+- data/financials.json (주가·시가총액 - financial-datasets는 시세 미제공)
+- raw/뉴스-NVIDIA-2026Q2전망.md, raw/애널리스트-의견-2026.md, raw/적정가-가정-2026.md
+- data/assumptions.json (적정 범위 근거: assumptions-bands.md)
+
+데이터 출처: 실시간 조회(MCP) - financial-datasets get_financials(ticker=NVDA), accession 0001045810-26-000052, filed 2026-05-20
+</script>
+
+<script type="text/plain" data-path="examples/sample-live-inconsistent.md">
+# NVIDIA 적정가치 리포트 (stage6 결함 데모 - 실시간 데이터 내부 불일치, 실패 케이스)
+> ❌ 실시간 조회를 밝히고 분기 표·TTM 표도 갖췄지만, '## 정량 분석' 표의 매출 증가율·순이익
+> 증가율 값이 그 표로 재계산한 값과 다르다(임의로 부풀림). 정답 파일이 없는 대신 자신이
+> 인용한 원자료와의 내부 일관성이 검증 대상이라는 걸 보여주는 데모.
+
+| 지표 | 계산식 | 값 |
+| 매출 증가율(최근 분기 YoY) | (81,615−44,062)÷44,062 | **99.9**(임의로 부풀린 값) |
+| 순이익 증가율(최근 분기 YoY)| (58,321−18,775)÷18,775 | **300.0**(임의로 부풀린 값) |
+
+→ validate_fair_value.py가 리포트의 분기 표(81,615 / 44,062)로 직접 재계산 → 85.2%가 나온다.
+  리포트에 적힌 99.9는 재계산값과 불일치 → exit 2, stderr에 "매출증가율 값 불일치" → 재작성 루프.
+</script>
+
+<script type="text/plain" data-path=".claude/skills/리포트 공유/SKILL.md">
+---
+name: 리포트 공유
+description: hook 통과 + fair-value-reviewer PASS된 reports/fair-value.md를 파일 공유로 본인
+메일함에 발송한다. reports/fair-value.md가 검증을 통과하기 전에는 쓰지 않는다.
+---
+
+# 완성 리포트 메일 발송 (파일 공유 워크플로우 연동)
+
+리포트는 파일로 완성되는 게 아니라 실제 업무 프로세스(보고·공유)에 얹혀야 끝난다.
+
+## 실행 전 확인
+1. validate_fair_value.py 통과(exit 0)했는가?
+2. fair-value-reviewer subagent 채점이 PASS(>=9/16)인가?
+   → 하나라도 아니면 먼저 리포트를 고친다. 검증 안 된 리포트를 보내지 않는다.
+
+## 메일 구성
+- 제목: [적정가치 리포트] NVIDIA(NVDA) 판정 결과 - <저평가/적정/고평가>
+- 본문: '## 종합 판정'·'## 결론'을 3~5문장 요약.
+- 수신자: 실습자 본인 사내 이메일(선택한 공유 채널) - 파일 공유는 그 외 도메인을 거부.
+
+## 호출 방법
+파일 저장 를 subject/contents/sender/recipients 형태로 호출.
+
+## 발송 후
+- 응답의 mailId를 reports/fair-value.md 맨 끝에 '> 메일 발송 완료: mailId=<값>' 한 줄로 덧붙인다.
+</script>
+
+<script>
+/* ============ 데이터 모델 (실제 파일에서 그라운딩) ============ */
+const NODES = [
+  { id:'U',   label:'/fair-value-report NVIDIA', cat:'input',  col:0, row:0, actor:'human',
+    files:[{path:'CLAUDE.md',action:'read'}],
+    desc:'사용자가 스킬 커맨드를 입력해 파이프라인을 시작한다.',
+    why:'사람이 시작점을 준다 - 이후 단계는 이 한 줄에서 자동으로 이어진다.' },
+  { id:'MCP', label:'🔌 financial-datasets\nmcp__financial-datasets__get_financials\n(ticker=NVDA, fiscal_periods=8)', cat:'mcp', col:1, row:0, actor:'ai',
+    files:[{path:'.claude/skills/fair-value-report/SKILL.md',action:'read'}],
+    desc:'MCP 서버 financial-datasets의 mcp__financial-datasets__get_financials 툴로 SEC EDGAR XBRL 재무 API를 실시간 호출해 최근 8개 구간(분기 누적치 포함)을 받는다.',
+    why:'stage6의 정형 원천이 정적 파일(data/financials.json)이 아니라 살아있는 MCP 조회로 바뀐 바로 그 지점. 조회 시점마다 값이 달라질 수 있어 검증 방식 자체가 달라진다.' },
+  { id:'DEC1',label:'실시간 조회 성공?', cat:'gate', col:2, row:0, actor:'ai',
+    files:[{path:'data/financials.json',action:'read'}],
+    desc:'MCP 응답 성공/실패로 경로가 갈린다. 실패(사내망 연결 불가·타임아웃) 시 정적 스냅샷으로 폴백.',
+    why:'라이브 데이터의 현실 - 항상 붙는다는 보장이 없다. 폴백을 흐리지 않고 명시적으로 분기한다.' },
+  { id:'STD', label:'당기/전기 분기 식별\n+ TTM 역산(6.53)', cat:'data', col:3, row:0, actor:'ai',
+    files:[{path:'CLAUDE.md',action:'read'}],
+    desc:'end_date로 3개월짜리 당기·전기 분기를 식별하고, YTD 누적치에서 표준 분기값(당기−직전)을 역산해 최근 4개 분기를 합산(TTM EPS 6.53).',
+    why:'공시가 회계연도 누적치로 실려 있어 그대로 쓰면 틀린다. 이 역산이 최신 성장을 반영한 주가배수(33.2배)의 근거.' },
+  { id:'FB',  label:'폴백: data/financials.json\n(FY2026 연간)', cat:'data', col:3, row:1, actor:'ai',
+    files:[{path:'data/financials.json',action:'read'}],
+    desc:'실시간 조회 실패 시 정적 스냅샷(FY2026 연간, stage3-5과 동일)으로 전환하고 폴백 사유를 기록한다.',
+    why:'조회 실패에도 리포트를 낼 수 있게 하는 안전망. 단 "라이브 실패 폴백"과 "MCP가 애초에 안 주는 주가"를 구분한다.' },
+  { id:'RAW', label:'raw/ 비정형 읽기\n(뉴스·애널리스트·적정가 가정)', cat:'unstr', col:4, row:0, actor:'ai',
+    files:[{path:'raw/뉴스-NVIDIA-2026Q2전망.md',action:'read'},
+           {path:'raw/애널리스트-의견-2026.md',action:'read'},
+           {path:'raw/적정가-가정-2026.md',action:'read'}],
+    desc:'성장성·리스크·목표주가·적정가 가정을 뽑는다. 긍정/우려 요인을 균형 있게, 출처 인라인으로.',
+    why:'NVIDIA는 현재 실적만으로 저/고평가가 안 갈린다 - 미래 예상 가정(비정형)이 판정을 좌우한다.' },
+  { id:'REP', label:'리포트 작성\nreports/fair-value.md', cat:'output', col:5, row:0, actor:'ai',
+    files:[{path:'reports/fair-value.md',action:'write'},
+           {path:'.claude/skills/fair-value-report/SKILL.md',action:'read'}],
+    desc:'필수 섹션 순서대로 작성. 실시간 모드면 분기 표·TTM 역산 표를 포함하고 "데이터 출처:" 마커(accession·filed)를 남긴다.',
+    why:'검증 대상 산출물. 정답 파일이 없으므로 리포트가 스스로 원자료를 표로 인용해야 hook이 재계산할 수 있다.' },
+  { id:'REV', label:'fair-value-reviewer subagent\n(정성 채점, 동기 호출)', cat:'informal', col:6, row:0, actor:'ai',
+    files:[{path:'.claude/agents/fair-value-reviewer.md',action:'run'},
+           {path:'reports/fair-value.md',action:'read'}],
+    desc:'Skill 실행 도중 동기적으로 호출. 정성 균형·종합 일관성·미래 예상 가정 명시성·범위 밖 근거 설득력을 0~4점씩 채점.',
+    why:'이중 오라클의 "비정형" 절반. hook이 판정할 수 없는 주관 영역을 LLM-as-judge가 본다.' },
+  { id:'DECR',label:'리뷰어 PASS ≥ 9/16?', cat:'gate', col:7, row:0, actor:'ai',
+    files:[{path:'.claude/agents/fair-value-reviewer.md',action:'read'}],
+    desc:'Reviewer 결과가 Skill 내에서 블로킹으로 나온다. FAIL이면 응답을 마치기 전에 곧장 재작성 루프로.',
+    why:'정성 품질 게이트. 정형 hook이 잡지 못하는 "논거가 편중됐다·판정이 근거 없이 튄다"를 여기서 막는다.' },
+  { id:'STOP',label:'응답 종료 → Stop hook 자동\nvalidate_fair_value.py', cat:'formal', col:8, row:0, actor:'ai',
+    files:[{path:'scripts/validate_fair_value.py',action:'run'},
+           {path:'.claude/settings.json',action:'read'},
+           {path:'data/assumptions.json',action:'read'}],
+    desc:'Claude가 한 턴 응답을 마치자마자(사용자 인터럽트 제외) settings.json의 Stop hook이 자동 실행. 형식·데이터출처 마커·정량 지표 내부 일관성·가정 범위를 검사.',
+    why:'reviewer와 다른 시점(응답 종료 후 자동)에 발동하는 정형 오라클. 리포트가 스스로 인용한 분기 표로부터 재계산해 대조 - 정답 파일이 없다.' },
+  { id:'DECH',label:'hook exit 0?', cat:'gate', col:9, row:0, actor:'ai',
+    files:[{path:'scripts/validate_fair_value.py',action:'read'}],
+    desc:'exit 0이면 통과, exit 2면 stderr 사유가 Claude에게 전달돼 종료를 못 하고 리포트를 고치게 된다.',
+    why:'결정론 게이트. 재계산값 불일치(예: 매출증가율 99.9 vs 85.2)를 여기서 정확히 집어낸다.' },
+  { id:'SEND',label:'🔌 파일 공유 · /리포트 공유\n파일 저장\n→ 본인 메일함 발송', cat:'mcp', col:10, row:0, actor:'human',
+    files:[{path:'.claude/skills/리포트 공유/SKILL.md',action:'read'},
+           {path:'reports/fair-value.md',action:'read'}],
+    desc:'두 오라클 모두 통과 후 사용자가 호출. MCP 서버 공유의 파일 저장 툴로 본인 사내 메일함(선택한 공유 채널)에 요약 발송하고 mailId를 리포트에 남긴다.',
+    why:'분석 결과는 파일로 끝나지 않고 실제 업무 프로세스(보고·공유)에 얹혀야 완성된다 - 그 연결도 MCP(공유)가 담당한다.' },
+];
+
+const EDGES = [
+  { from:'U',   to:'MCP' },
+  { from:'MCP', to:'DEC1' },
+  { from:'DEC1',to:'STD', label:'성공' },
+  { from:'DEC1',to:'FB',  label:'실패(연결 불가)' },
+  { from:'STD', to:'RAW' },
+  { from:'FB',  to:'RAW', label:'폴백값 사용' },
+  { from:'RAW', to:'REP' },
+  { from:'REP', to:'REV' },
+  { from:'REV', to:'DECR' },
+  { from:'DECR',to:'REP', label:'FAIL(<9) → 재작성', kind:'loopback' },
+  { from:'DECR',to:'STOP',label:'PASS → 응답 종료' },
+  { from:'STOP',to:'DECH' },
+  { from:'DECH',to:'REP', label:'실패(exit 2) → 재작성', kind:'loopback' },
+  { from:'DECH',to:'SEND',label:'통과(exit 0)' },
+];
+
+const STEPS = [
+  { activeNodes:['U'],    note:'① 사람이 시작', ctxAdd:[{label:'커맨드 /fair-value-report NVIDIA', cat:'input'}] },
+  { activeNodes:['MCP'],  note:'② 실시간 정형 조회 (MCP)', ctxAdd:[{label:'🔌 mcp__financial-datasets__get_financials 호출 (NVDA, 8구간)', cat:'mcp'}] },
+  { activeNodes:['DEC1'], note:'③ 조회 성공 - 라이브 경로', ctxAdd:[{label:'MCP 응답 8개 구간(누적치 포함)', cat:'data'}] },
+  { activeNodes:['STD'],  note:'④ 당기/전기 분기 + TTM 역산', ctxAdd:[{label:'FY2027 Q1(당기)·FY2026 Q1(전기)', cat:'data'},{label:'TTM EPS 6.53 (4개 표준 분기 합)', cat:'data'}] },
+  { activeNodes:['RAW'],  note:'⑤ 비정형 읽기', ctxAdd:[{label:'뉴스·애널리스트 61명·적정가 가정', cat:'unstr'}] },
+  { activeNodes:['REP'],  note:'⑥ 리포트 1차 작성 (매출증가율 99.9로 부풀림)', ctxAdd:[{label:'reports/fair-value.md 초안(1차)', cat:'output'}] },
+  { activeNodes:['REV'],  note:'⑦ reviewer 동기 채점', ctxAdd:[{label:'정성 채점 결과 11/16', cat:'informal'}] },
+  { activeNodes:['DECR'], note:'⑧ 리뷰어 PASS(11≥9) → 응답 종료', ctxAdd:[{label:'리뷰어 PASS', cat:'informal'}] },
+  { activeNodes:['STOP'], note:'⑨ Stop hook 자동 실행 - 분기 표로 재계산', ctxAdd:[{label:'재계산: 매출증가율 85.2%(리포트엔 99.9)', cat:'formal'}] },
+  { activeNodes:['DECH'], note:'❌ 1차: 매출증가율 값 불일치 → exit 2', ctxAdd:[{label:'hook FAIL - 내부 일관성 위반', cat:'formal'}] },
+  { activeNodes:['REP'],  note:'실패 경로 - 재작성(85.2로 수정)', ctxAdd:[{label:'reports/fair-value.md 재작성(2차)', cat:'output'}] },
+  { activeNodes:['REV'],  note:'⑦\' reviewer 재채점', ctxAdd:[{label:'정성 채점 재확인 PASS', cat:'informal'}] },
+  { activeNodes:['STOP'], note:'⑨\' Stop hook 재실행 - 재계산 일치', ctxAdd:[{label:'재계산 일치: 85.2/210.6/65.6/33.2', cat:'formal'}] },
+  { activeNodes:['DECH'], note:'✅ 2차: exit 0 통과', ctxAdd:[{label:'hook PASS - 이중 오라클 통과', cat:'formal'}] },
+  { activeNodes:['SEND'], note:'⑩ 파일 공유 메일 발송', gate:true, ctxAdd:[{label:'🔌 파일 저장 발송 (mailId 기록)', cat:'mcp'}] },
+];
+
+const TREE = [
+  {d:0,k:'dir', name:'stage6-mcp-integration/'},
+  {d:1,k:'file',name:'CLAUDE.md', path:'CLAUDE.md'},
+  {d:1,k:'file',name:'assumptions-bands.md', path:'assumptions-bands.md'},
+  {d:1,k:'dir', name:'.claude/'},
+  {d:2,k:'file',name:'settings.json', path:'.claude/settings.json'},
+  {d:2,k:'dir', name:'skills/'},
+  {d:3,k:'file',name:'fair-value-report/SKILL.md', path:'.claude/skills/fair-value-report/SKILL.md'},
+  {d:3,k:'file',name:'리포트 공유/SKILL.md', path:'.claude/skills/리포트 공유/SKILL.md'},
+  {d:2,k:'dir', name:'agents/'},
+  {d:3,k:'file',name:'fair-value-reviewer.md', path:'.claude/agents/fair-value-reviewer.md'},
+  {d:1,k:'dir', name:'scripts/'},
+  {d:2,k:'file',name:'validate_fair_value.py', path:'scripts/validate_fair_value.py'},
+  {d:1,k:'dir', name:'data/'},
+  {d:2,k:'file',name:'financials.json', path:'data/financials.json'},
+  {d:2,k:'file',name:'assumptions.json', path:'data/assumptions.json'},
+  {d:1,k:'dir', name:'raw/'},
+  {d:2,k:'file',name:'뉴스-NVIDIA-2026Q2전망.md', path:'raw/뉴스-NVIDIA-2026Q2전망.md'},
+  {d:2,k:'file',name:'애널리스트-의견-2026.md', path:'raw/애널리스트-의견-2026.md'},
+  {d:2,k:'file',name:'적정가-가정-2026.md', path:'raw/적정가-가정-2026.md'},
+  {d:1,k:'dir', name:'reports/'},
+  {d:2,k:'file',name:'fair-value.md', path:'reports/fair-value.md'},
+  {d:1,k:'dir', name:'examples/'},
+  {d:2,k:'file',name:'sample-live-inconsistent.md', path:'examples/sample-live-inconsistent.md'},
+];
+
+const KEY_INSIGHT = '데이터가 "살아있으면"(실시간 MCP 조회) 검증 방식도 다시 설계해야 한다. stage3-5의 hook은 "고정된 정답 파일과 일치하는가"를 봤지만, stage6의 hook은 정답 파일이 없어 "리포트가 스스로 인용한 원자료(분기 표)로부터 올바르게 재계산했는가"라는 내부 일관성을 본다. 그리고 그 위를 subagent(Skill 내 동기)와 Stop hook(응답 종료 후 자동)이 서로 다른 시점에 지키는 이중 오라클이 감싼다 - 판정 기준의 형식지화는 한 번 끝나는 일이 아니라 유지보수 작업이다.';
+
+/* ============ 파일 원문 로드 (embed script → FILES) ============ */
+const FILES = {};
+document.querySelectorAll('script[type="text/plain"][data-path]').forEach(s=>{
+  FILES[s.getAttribute('data-path')] = s.textContent.replace(/^\n/,'');
+});
+
+/* ============ cytoscape ============ */
+const ACTOR_ICON = { human:'👤', ai:'🤖' };
+
+/* ── 사이징은 고정 px가 아니라 "텍스트 측정"으로 계산한다 (스킬 사이징 3원칙) ──
+   ① 노드 안 텍스트는 반드시 다 들어간다: 라벨을 오프스크린 canvas로 측정 → 박스 크기 계산.
+   ② 엣지 라벨 폰트 = 노드 라벨 폰트: 단 하나의 FONT_SIZE를 공유.
+   ③ 노드 폭 : 화살표 최소 길이 = 1:1: 컬럼 간격을 노드 폭으로 유도(라벨 있으면 더 넓힘). */
+const FONT_SIZE = 26;   // 노드 11개·최장 체인에 맞춘 시작값(노드·엣지 라벨이 공유)
+const FAMILY = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
+function measure(text, fontPx, weight){
+  const ctx = measure._ctx || (measure._ctx = document.createElement('canvas').getContext('2d'));
+  ctx.font = (weight||600)+' '+fontPx+'px '+FAMILY;
+  return Math.max(...String(text).split('\n').map(l=>ctx.measureText(l).width));
+}
+const PAD_X = 30, PAD_Y = 22, LINE_H = FONT_SIZE*1.3;
+// (원칙 1) 각 노드 라벨을 실제 측정해 박스 크기 계산 - 긴 툴 이름/경로도 안 잘리게.
+NODES.forEach(n=>{
+  const lines = ((ACTOR_ICON[n.actor]||'')+' '+n.label).split('\n');
+  const w = Math.max(...lines.map(l=>measure(l, FONT_SIZE))) + PAD_X*2;
+  const h = lines.length*LINE_H + PAD_Y*2;
+  const k = n.cat==='gate' ? 1.4 : 1;      // 다이아몬드는 대각선 여유가 더 필요
+  n.w = Math.ceil(w*k); n.h = Math.ceil(h*k);
+});
+const NODE = Object.fromEntries(NODES.map(n=>[n.id,n]));
+
+// (원칙 3) 진행축 컬럼 간격 = 노드 폭 1:1(화살표 최소 길이 ≈ 노드 폭). 라벨 있는 엣지는 더 넓힘.
+const colWidth = {};
+NODES.forEach(n=>{ colWidth[n.col] = Math.max(colWidth[n.col]||0, n.w); });
+const maxCol = Math.max(...NODES.map(n=>n.col));
+const xOfCol = {0:0};
+for(let c=1;c<=maxCol;c++){
+  let gap = (colWidth[c-1]+colWidth[c])/2;                        // 1:1 기준
+  EDGES.forEach(e=>{
+    const a=NODE[e.from], b=NODE[e.to];
+    if(a&&b&&a.col===c-1&&b.col===c&&e.label)
+      gap = Math.max(gap, measure(e.label, FONT_SIZE, 700)+48);   // 라벨이 더 넓으면 그만큼 벌림
+  });
+  xOfCol[c] = xOfCol[c-1] + colWidth[c-1]/2 + gap + colWidth[c]/2;
+}
+const rowHeight = {};
+NODES.forEach(n=>{ rowHeight[n.row] = Math.max(rowHeight[n.row]||0, n.h); });
+const MRH = Math.max(...Object.values(rowHeight));
+const ROW_Y = MRH + 48;   // 분기축은 1:1 대상 아님 - 노드 높이 + 여백만 확보
+
+const elements = [
+  ...NODES.map(n=>({ data:{ id:n.id, label:(ACTOR_ICON[n.actor]||'')+' '+n.label, cat:n.cat, actor:n.actor, w:n.w, h:n.h },
+                     position:{ x:xOfCol[n.col], y:n.row*ROW_Y } })),
+  ...EDGES.map((e,i)=>({ data:{ id:'e'+i, source:e.from, target:e.to, label:e.label||'', kind:e.kind||'' } })),
+];
+
+const cy = cytoscape({
+  container: document.getElementById('flow'),
+  elements,
+  layout:{ name:'preset' },
+  wheelSensitivity:0.2,
+  style:[
+    // 노드 크기 = 측정값 data(w)/data(h). 여기서 고정 width/height를 다시 주지 않는다(측정 무의미해짐).
+    { selector:'node', style:{
+        'label':'data(label)','text-valign':'center','text-halign':'center','text-wrap':'wrap',
+        'font-family':FAMILY,'width':'data(w)','height':'data(h)','font-size':FONT_SIZE,'color':'#1a1a1a','font-weight':600,
+        'background-color':'#fff','border-width':3,'border-color':'#c9c9c9','shape':'round-rectangle',
+        'transition-property':'opacity','transition-duration':'0.25s' } },
+    { selector:'node[cat="input"]',    style:{ 'border-color':'#e8862a','background-color':'#fff4e8' } },
+    { selector:'node[cat="data"]',     style:{ 'border-color':'#33a852','background-color':'#eefaf2' } },
+    { selector:'node[cat="mcp"]',      style:{ 'border-color':'#d81b8c','background-color':'#fde7f3','border-width':6 } },
+    { selector:'node[cat="unstr"]',    style:{ 'border-color':'#9b59b6','background-color':'#f6eefb' } },
+    { selector:'node[cat="output"]',   style:{ 'border-color':'#5b6b7f','background-color':'#eef1f5' } },
+    { selector:'node[cat="informal"]', style:{ 'border-color':'#4a7dff','background-color':'#eef3ff' } },
+    { selector:'node[cat="formal"]',   style:{ 'border-color':'#12a5a5','background-color':'#e6f7f7' } },
+    { selector:'node[cat="gate"]',     style:{ 'border-color':'#d4a017','background-color':'#fdf6e3','shape':'round-diamond' } },
+    { selector:'node[actor="human"]',  style:{ 'border-style':'dashed' } },
+    { selector:'node.active', style:{ 'border-color':'#d97757','border-width':8,'background-color':'#fff3ee',
+        'overlay-color':'#d97757','overlay-opacity':0.16,'overlay-padding':24,'z-index':99 } },
+    { selector:'node.picked', style:{ 'border-color':'#2a5fd0','border-width':5,'border-style':'double' } },
+    { selector:'node.dim',    style:{ 'opacity':0.32 } },
+    { selector:'edge', style:{
+        'width':3,'line-color':'#b7b7b7','target-arrow-color':'#b7b7b7','target-arrow-shape':'triangle',
+        'arrow-scale':Math.max(1.4, FONT_SIZE/16),                 // (원칙 2) 화살촉도 FONT_SIZE에 비례
+        'curve-style':'bezier','font-family':FAMILY,'label':'data(label)','font-size':FONT_SIZE,'font-weight':700,'color':'#222', // (원칙 2) 노드와 동일 폰트
+        'text-background-color':'#fff','text-background-opacity':1,'text-background-padding':6,
+        'text-background-shape':'roundrectangle','text-border-color':'#d0d0d0','text-border-width':1,'text-border-opacity':1,
+        'text-rotation':'none','z-index':30,'z-index-compare':'manual',
+        'transition-property':'opacity','transition-duration':'0.25s' } },
+    { selector:'edge[kind="loopback"]', style:{ 'line-style':'dashed','line-color':'#d98a6a',
+        'target-arrow-color':'#d98a6a','color':'#b5623d','curve-style':'unbundled-bezier',
+        'control-point-distances':[MRH*1.6],'control-point-weights':[0.5],'text-border-color':'#e0b3a0' } },
+    // 두 루프백은 아치 높이를 달리해 선·라벨이 겹치지 않게(짧은 되돌림=낮게, 긴 되돌림=높게).
+    { selector:'edge[source="DECR"][target="REP"]', style:{ 'control-point-distances':[MRH*1.3] } },
+    { selector:'edge[source="DECH"][target="REP"]', style:{ 'control-point-distances':[MRH*2.7] } },
+    { selector:'edge.flow', style:{ 'line-color':'#d97757','target-arrow-color':'#d97757','width':6,
+        'line-style':'dashed','line-dash-pattern':[12,7],'z-index':98,'opacity':1 } },
+    { selector:'edge.dim',  style:{ 'opacity':0.18 } },
+  ],
+});
+
+/* ============ 상태 ============ */
+let stepIdx=-1, playing=false, timer=null, awaitingGate=false, pulseRAF=null, flowRAF=null;
+const $=id=>document.getElementById(id);
+
+function focusNode(ids){
+  const eles = cy.collection(ids.map(i=>cy.$('#'+i)));
+  if(!eles.length) return;
+  const bb=eles.boundingBox();
+  const z=cy.zoom();                       // ⚠ 고정 배율로 강제하지 않는다 - 사용자가 맞춰둔 현재 배율 유지
+  const mx=(bb.x1+bb.x2)/2, my=(bb.y1+bb.y2)/2;
+  const w=cy.width(), h=cy.height();
+  // 우상단 범례가 활성 노드를 가리지 않게 살짝 왼쪽으로. 축소(전체 보기) 상태에선 오프셋도 줄인다.
+  const OFF=Math.min(300, 300*z);
+  cy.animate({ pan:{ x:w/2-OFF-mx*z, y:h/2-my*z } }, { duration:360 });  // zoom은 건드리지 않고 pan만 이동
+}
+function pulse(){
+  cancelAnimationFrame(pulseRAF);
+  const t0=performance.now();
+  const tick=(t)=>{ const s=(Math.sin((t-t0)/380)+1)/2;
+    cy.$('.active').style({ 'overlay-padding':18+s*16, 'overlay-opacity':0.10+s*0.14 });
+    pulseRAF=requestAnimationFrame(tick); };
+  pulseRAF=requestAnimationFrame(tick);
+}
+function animateEdge(fromId,toId){
+  const e=cy.edges(`[source="${fromId}"][target="${toId}"]`);
+  cy.edges('.flow').removeClass('flow');
+  cancelAnimationFrame(flowRAF);
+  if(!e.length) return;
+  e.addClass('flow'); let off=0;
+  const tick=()=>{ off=(off-2)%160; e.style('line-dash-offset',off); flowRAF=requestAnimationFrame(tick); };
+  flowRAF=requestAnimationFrame(tick);
+}
+function spotlight(activeIds){
+  cy.nodes().removeClass('dim'); cy.edges().removeClass('dim');
+  const act=new Set(activeIds);
+  cy.nodes().forEach(n=>{ if(!act.has(n.id())) n.addClass('dim'); });
+  cy.edges().forEach(e=>{ if(!(act.has(e.data('source'))&&act.has(e.data('target')))) e.addClass('dim'); });
+}
+
+/* ---- context 누적 패널 ---- */
+const CATLABEL={input:'입력(사람)',data:'정형 데이터',mcp:'MCP 호출',unstr:'비정형',output:'산출물',informal:'비정형 검증',formal:'정형 검증'};
+const CATCOLOR={input:'#e8862a',data:'#33a852',mcp:'#d81b8c',unstr:'#9b59b6',output:'#5b6b7f',informal:'#4a7dff',formal:'#12a5a5'};
+function renderContext(){
+  const wrap=$('ctxlist'); wrap.innerHTML='';
+  let items=[];
+  for(let i=0;i<=stepIdx;i++){ (STEPS[i].ctxAdd||[]).forEach(c=>items.push({...c,step:i})); }
+  items.forEach((c,idx)=>{
+    const el=document.createElement('div');
+    el.className='ctxitem'+(idx===items.length-1?' newest':'');
+    el.style.borderLeftColor=CATCOLOR[c.cat]||'#ccc';
+    el.innerHTML=`${escapeHtml(c.label)}<small>${CATLABEL[c.cat]||c.cat} · 스텝 ${c.step+1}</small>`;
+    wrap.appendChild(el);
+  });
+  $('ctxcount').textContent = items.length?`지금까지 ${items.length}개 누적`:'아직 비어 있음';
+  wrap.scrollTop=wrap.scrollHeight;
+}
+
+/* ---- 트리 ---- */
+let touched=new Set();
+function renderTree(activeFiles){
+  const box=$('tree'); box.innerHTML='';
+  const actMap={}; (activeFiles||[]).forEach(f=>actMap[f.path]=f.action);
+  TREE.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='tnode '+(t.k==='dir'?'dir':'file');
+    el.style.paddingLeft=(6+t.d*16)+'px';
+    let inner=(t.k==='dir'?'📁 ':'📄 ')+escapeHtml(t.name);
+    if(t.k==='file'){
+      if(actMap[t.path]){ el.classList.add('active','hl-'+actMap[t.path]);
+        inner+=`<span class="act">${actMap[t.path].toUpperCase()}</span>`; }
+      else if(touched.has(t.path)) el.classList.add('touched');
+      el.onclick=()=>{ showFiles([{path:t.path,action:actMap[t.path]||'read'}]); selectNodeByFile(t.path); };
+    }
+    el.innerHTML=inner;
+    box.appendChild(el);
+  });
+}
+function selectNodeByFile(path){
+  const n=NODES.find(n=>n.files.some(f=>f.path===path));
+  if(n){ cy.nodes().removeClass('picked'); cy.$('#'+n.id).addClass('picked'); }
+}
+
+/* ---- 파일 뷰어 ---- */
+let vfiles=[], vactive=0;
+function showFiles(files){
+  vfiles=files||[]; vactive=0;
+  const tabs=$('vtabs'); tabs.innerHTML='';
+  if(!vfiles.length){ $('vbody').textContent='(이 노드는 참조 파일이 없습니다)'; return; }
+  vfiles.forEach((f,i)=>{
+    const b=document.createElement('button'); b.className='vtab'+(i===0?' on':'');
+    b.textContent=f.path.split('/').pop()+(f.action?` [${f.action}]`:'');
+    b.onclick=()=>{ vactive=i; [...tabs.children].forEach((c,j)=>c.classList.toggle('on',j===i)); paintFile(); };
+    tabs.appendChild(b);
+  });
+  paintFile();
+}
+function paintFile(){
+  const f=vfiles[vactive]; if(!f) return;
+  $('vbody').textContent = FILES[f.path]!==undefined ? FILES[f.path] : '(원문 임베드 없음: '+f.path+')';
+  $('vbody').scrollTop=0;
+}
+
+/* ---- 상세 밴드 ---- */
+function renderBand(){
+  const band=$('band');
+  if(stepIdx<0){
+    band.innerHTML=`<div class="insight"><div class="k">KEY INSIGHT - 이 하네스의 핵심</div>
+      <div class="t">${escapeHtml(KEY_INSIGHT)}</div></div>`;
+    return;
+  }
+  const st=STEPS[stepIdx];
+  const ns=st.activeNodes.map(id=>NODE[id]);
+  const primary=ns[0];
+  const descs=ns.map(n=>`<div class="band-desc"><b>${escapeHtml(n.label.replace(/\n/g,' '))}</b> ${escapeHtml(n.desc)}</div>`).join('');
+  band.innerHTML=`
+    ${st.note?`<div class="band-note">${escapeHtml(st.note)}</div>`:''}
+    <div class="band-title">스텝 ${stepIdx+1} / ${STEPS.length}</div>
+    ${descs}
+    <div class="band-why">💡 왜 중요한가 - ${escapeHtml(primary.why)}</div>`;
+}
+
+/* ---- goTo ---- */
+function goTo(i){
+  if(i<-1) i=-1; if(i>STEPS.length-1) i=STEPS.length-1;
+  const prev=stepIdx; stepIdx=i;
+  cy.nodes().removeClass('active picked');
+  if(stepIdx<0){
+    cancelAnimationFrame(pulseRAF); cy.edges('.flow').removeClass('flow'); cancelAnimationFrame(flowRAF);
+    cy.nodes().removeClass('dim'); cy.edges().removeClass('dim');
+    renderContext(); renderTree([]); renderBand(); updateInd(); $('gate').style.display='none';
+    return;
+  }
+  const st=STEPS[stepIdx];
+  // 엣지 흐름 애니메이션 (직전 활성 → 현재 활성)
+  if(prev>=0 && prev!==stepIdx){
+    const a=STEPS[prev].activeNodes[0], b=st.activeNodes[0];
+    animateEdge(a,b);
+  } else { cy.edges('.flow').removeClass('flow'); }
+  st.activeNodes.forEach(id=>cy.$('#'+id).addClass('active'));
+  st.activeNodes.forEach(id=>NODE[id].files.forEach(f=>touched.add(f.path)));
+  spotlight(st.activeNodes); pulse(); focusNode(st.activeNodes);
+  const actFiles=st.activeNodes.flatMap(id=>NODE[id].files);
+  renderContext(); renderTree(actFiles); renderBand(); updateInd();
+  if(st.activeNodes.length===1) showFiles(NODE[st.activeNodes[0]].files);
+  // 게이트
+  if(st.gate){ awaitingGate=true; $('gate').style.display='block'; }
+  else { awaitingGate=false; $('gate').style.display='none'; }
+}
+function updateInd(){ $('ind').textContent=`${stepIdx+1} / ${STEPS.length}`;
+  $('rew').disabled=stepIdx<0; $('fwd').disabled=stepIdx>=STEPS.length-1; }
+
+/* ---- 재생 ---- */
+function play(){ playing=true; $('play').textContent='⏸';
+  timer=setInterval(()=>{ if(awaitingGate) return;
+    if(stepIdx>=STEPS.length-1){ pause(); return; } goTo(stepIdx+1); }, 1600); }
+function pause(){ playing=false; $('play').textContent='⏵'; clearInterval(timer); timer=null; }
+$('play').onclick=()=>{ if(playing) pause(); else { if(stepIdx>=STEPS.length-1) goTo(-1); play(); } };
+$('fwd').onclick=()=>{ if(stepIdx<STEPS.length-1) goTo(stepIdx+1); };
+$('rew').onclick=()=>{ goTo(stepIdx-1); };
+// 🔍 전체 보기: 전체 그래프를 한 화면에 축소. 이후 forward/rewind/play는 focusNode가 cy.zoom()을
+// 유지하므로 이 축소 배율 그대로 활성 노드만 패닝하며 따라간다.
+$('fit').onclick=()=>{ cy.animate({ fit:{ eles:cy.elements(), padding:60 } }, { duration:420 }); };
+$('gate').onclick=()=>{ awaitingGate=false; $('gate').style.display='none';
+  if(!playing && stepIdx<STEPS.length-1) goTo(stepIdx+1); };
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){ if(stepIdx<STEPS.length-1) goTo(stepIdx+1); }
+  else if(e.key==='ArrowLeft'){ goTo(stepIdx-1); }
+});
+
+/* ---- 노드/엣지 클릭 → 시점 점프 ---- */
+function firstStepContaining(id){ return STEPS.findIndex(s=>s.activeNodes.includes(id)); }
+cy.on('tap','node',ev=>{
+  const id=ev.target.id();
+  cy.nodes().removeClass('picked'); ev.target.addClass('picked');
+  showFiles(NODE[id].files);
+  const si=firstStepContaining(id);
+  if(si>=0) goTo(si);
+  else { // 경로 밖 노드(예: 폴백) - 상세만
+    const n=NODE[id];
+    $('band').innerHTML=`<div class="band-note">경로 밖 노드(재생 스텝 아님)</div>
+      <div class="band-title">${escapeHtml(n.label.replace(/\n/g,' '))}</div>
+      <div class="band-desc">${escapeHtml(n.desc)}</div>
+      <div class="band-why">💡 ${escapeHtml(n.why)}</div>`;
+  }
+});
+cy.on('tap','edge',ev=>{ const t=ev.target.data('target'); const si=firstStepContaining(t); if(si>=0) goTo(si); });
+
+/* ---- 범례 ---- */
+function buildLegend(){
+  const cats=[['input','입력(사람 시작)'],['mcp','🔌 MCP 호출(financial-datasets·공유)'],['data','정형 데이터(분기/폴백)'],['unstr','비정형(raw/)'],
+              ['output','산출물(리포트/메일)'],['informal','비정형 검증(subagent)'],['formal','정형 검증(hook)'],['gate','판정/분기']];
+  let h='<b>카테고리</b>';
+  cats.forEach(([c,l])=>{ const col=c==='gate'?'#d4a017':CATCOLOR[c];
+    const em = c==='mcp' ? ';font-weight:800' : '';
+    h+=`<div class="row" style="${em?'font-weight:800':''}"><span class="dot" style="border-color:${col};background:${col}33"></span>${l}</div>`; });
+  h+='<b>실행 주체</b><div class="row">👤 사람 · 🤖 AI</div>';
+  h+='<b>엣지</b><div class="row">→ 진행 · ⤴ 루프백(점선)</div><div class="row"><span class="dot" style="border-color:#d97757;background:#d9775733"></span>주황 흐름 = 지금 지나가는 경로</div>';
+  $('legend').innerHTML=h;
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+/* ---- 초기화 ---- */
+buildLegend();
+cy.ready(()=>{ cy.zoom(1.24); cy.center(cy.$('#U')); cy.panBy({x:-260,y:20}); goTo(-1); });
+</script>
+</body>
+</html>

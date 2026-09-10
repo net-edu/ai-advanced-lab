@@ -1,0 +1,3256 @@
+<!DOCTYPE html><html lang="ko" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="MkDocs 로 만드는 문서 사이트">
+      
+      
+      
+        <link rel="canonical" href="https://net-edu.github.io/ai-advanced-lab/concepts/what-is-skill/">
+      
+      
+        <link rel="prev" href="../memory-md/">
+      
+      
+        <link rel="next" href="../what-is-rule/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/ai-advanced-lab-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Skill - AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/material-wide.css?h=784b2b95">
+    
+      <link rel="stylesheet" href="../../stylesheets/highlight-code.css?h=8c69c83b">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css?h=bccc653e">
+    
+      <link rel="stylesheet" href="../../stylesheets/nav-highlight.css?h=7a985485">
+    
+      <link rel="stylesheet" href="../../stylesheets/asciinema-embed.css?h=6502352e">
+    
+      <link rel="stylesheet" href="../../stylesheets/asciinema-player.css?h=4f1e20ee">
+    
+      <link rel="stylesheet" href="../../stylesheets/claude-terminal.css?h=875ac4fc">
+    
+      <link rel="stylesheet" href="../../stylesheets/code-window.css?h=ec5f3beb">
+    
+      <link rel="stylesheet" href="../../stylesheets/foldable.css?h=2dbfa670">
+    
+      <link rel="stylesheet" href="../../stylesheets/idle-cursor.css?h=b087f15f">
+    
+      <link rel="stylesheet" href="../../stylesheets/learning-tips.css?h=5fd55d6d">
+    
+      <link rel="stylesheet" href="../../stylesheets/leeum-editorial.css?h=80ef6051">
+    
+      <link rel="stylesheet" href="../../stylesheets/markdown-editor.css?h=dfe05bee">
+    
+      <link rel="stylesheet" href="../../stylesheets/minimap.css?h=b1c5522f">
+    
+      <link rel="stylesheet" href="../../stylesheets/service-switcher.css?h=e48abe45">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: black; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#skill-개념" class="md-skip">
+          콘텐츠로 이동
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="상단/헤더">
+    <a href="../.." title="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" class="md-header__button md-logo" aria-label="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" data-md-component="logo">
+      
+  <img src="../../assets/ai-advanced-lab-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Skill
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue" aria-label="야간 모드로 전환" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="야간 모드로 전환" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue" aria-label="주간 모드로 전환" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="주간 모드로 전환" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="검색" placeholder="검색" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="검색">
+        
+        <button type="reset" class="md-search__icon md-icon" title="지우기" aria-label="지우기" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            검색 초기화
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="탭" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  홈
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../warmup/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Warm Up
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../what-is-harness/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Claude Code
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../course/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  (WIP) 실습
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../course/personal-project/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  개인 프로젝트
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/token-saving/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  참고 자료
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../curriculum/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  강의 진행 자료
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="네비게이션" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" class="md-nav__button md-logo" aria-label="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" data-md-component="logo">
+      
+  <img src="../../assets/ai-advanced-lab-mark.svg" alt="logo">
+
+    </a>
+    AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    홈
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    홈
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/instructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    강사 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/orientation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    과정 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../warmup/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Warm Up
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Warm Up
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/terminal-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    터미널 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/git-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/github-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/markdown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Markdown 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/claude-code-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code 첫 실행
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Claude Code
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Harness란
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/turn-concept/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Turn과 Agent Loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context를 구성하는 요소들
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Context를 구성하는 요소들
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/claude-md-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLAUDE.md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory-md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MEMORY.md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skill
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skill
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="목차">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      목차
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#왜-필요한가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        왜 필요한가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#무엇으로-이루어지는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        무엇으로 이루어지는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#언제-로드되는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        언제 로드되는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#파일-구성과-배치-위치" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        파일 구성과 배치 위치
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#만드는-절차" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        만드는 절차
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#프롬프트로-간단히-만들기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        프롬프트로 간단히 만들기
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subagent와의-차이" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subagent와의 차이
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-skill-로딩은-내부적으로-어떻게-동작하는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) SKILL 로딩은 내부적으로 어떻게 동작하는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-frontmatter-필드" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) frontmatter 필드
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-호출-권한과-로드-시점" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 호출 권한과 로드 시점
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4">
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    권한/실행 (행동 승인·차단)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    권한/실행 (행동 승인·차단)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-rule/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-hook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/permissions-and-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    권한 모드와 슬래시 명령
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5">
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    멀티에이전트 (병렬 실행·격리)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    멀티에이전트 (병렬 실행·격리)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-subagent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-agent-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Teams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6">
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    외부연결 (MCP)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    외부연결 (MCP)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mcp/what-is-mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7">
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Marketplace &amp; Plugin
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Marketplace &amp; Plugin
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../marketplace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Marketplace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugin-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin 만들고 배포하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engineering 3축
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Engineering 3축
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harness-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Harness Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loop-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loop Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9">
+        
+          
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실무 레퍼런스
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    실무 레퍼런스
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/terminal-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    터미널 기능 총정리
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/session-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    세션 이름짓기·재개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../course/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    (WIP) 실습
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    (WIP) 실습
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/problem-definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실습 문제 정의
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/download-course-material/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실습 자료
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage1-prompt-only/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage1 : 프롬프트만으로 작업해보기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage2-context-attach/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage2 : 컨텍스트 추가해보기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage3-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage3 : 하네스로 구축하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage4-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage4 : 자가 수정 loop 만들기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage5-oracle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage5 : 오라클로 판정 기준 세우기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage6-mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    (WIP) stage6 : MCP로 실시간 연결하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage7-plugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage7 : 플러그인으로 배포하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage8-knowledge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage8 : 지식으로 자산화하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    개인 프로젝트
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    개인 프로젝트
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/personal-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    개인 프로젝트
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    참고 자료
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    참고 자료
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/token-saving/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    토큰 절약 기법
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/loop-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loop 의 종류
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/ai-sdlc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI SDLC 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../curriculum/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    강의 진행 자료
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    강의 진행 자료
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="목차">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      목차
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#왜-필요한가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        왜 필요한가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#무엇으로-이루어지는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        무엇으로 이루어지는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#언제-로드되는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        언제 로드되는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#파일-구성과-배치-위치" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        파일 구성과 배치 위치
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#만드는-절차" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        만드는 절차
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#프롬프트로-간단히-만들기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        프롬프트로 간단히 만들기
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subagent와의-차이" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subagent와의 차이
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-skill-로딩은-내부적으로-어떻게-동작하는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) SKILL 로딩은 내부적으로 어떻게 동작하는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-frontmatter-필드" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) frontmatter 필드
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-호출-권한과-로드-시점" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 호출 권한과 로드 시점
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="skill-개념">Skill 개념<a class="headerlink" href="#skill-개념" title="Permanent link">¶</a></h1>
+<p class="ailab-title-subtitle">- 필요할 때 불러오는 능력</p>
+
+<p>Skill은 특정 작업을 더 잘 수행하도록 Claude에게 미리 정리된 노하우와 절차를 담아준 문서 묶음으로, 문서 작성이나 데이터 분석처럼 반복되는 업무 방식을 표준화해둔 것입니다.</p>
+<p>예를 들어 <strong>주간보고 PPT 만들기</strong> Skill을 만들어두면, Claude가 매번 처음부터 방법을 고민하지 않고 그 안에 적힌 규칙(글씨체, 슬라이드 구성 순서 등)을 그대로 따라 작업합니다.</p>
+<p>만드는 절차는 이 문서의 <a href="#파일-구성과-배치-위치">파일 구성과 배치 위치</a>와 <a href="#만드는-절차">만드는 절차</a>에서 다룹니다.</p>
+<h2 id="왜-필요한가">왜 필요한가<a class="headerlink" href="#왜-필요한가" title="Permanent link">¶</a></h2>
+<p>지침을 전부 항상 컨텍스트에 올려 두면 토큰이 낭비됩니다.</p>
+<p>긴 참조 자료일수록 낭비가 큽니다.</p>
+<p>Skill은 본문을 <strong>사용할 때만 로드</strong>합니다.</p>
+<p>그래서 긴 참조 자료도 필요할 때까지는 비용이 거의 들지 않습니다.</p>
+<p>또 하나의 이유는 재사용입니다.</p>
+<p>자주 반복하는 작업 절차를 Skill로 묶으면, 매번 지침을 다시 적지 않아도 됩니다.</p>
+<p>이름으로 부르거나 Claude가 알아서 꺼내 씁니다.</p>
+<h2 id="무엇으로-이루어지는가">무엇으로 이루어지는가<a class="headerlink" href="#무엇으로-이루어지는가" title="Permanent link">¶</a></h2>
+<p>Skill의 핵심은 <code>SKILL.md</code> 파일 하나입니다.</p>
+<p>이 파일에 무엇을 하는 절차인지 지침으로 적습니다.</p>
+<p>같은 디렉터리에 참조 파일(<code>template.md</code>, <code>examples/</code>, <code>scripts/</code> 등)을 둘 수 있습니다.</p>
+<p>이 참조 파일들은 본문과 분리되어, 필요할 시에만 로드됩니다.</p>
+<p><code>SKILL.md</code>의 머리말에는 <code>description</code>을 적습니다.</p>
+<p><code>description</code>은 이 Skill이 무엇을 하고 언제 쓰는지를 밝힙니다.</p>
+<p>Claude는 이 설명을 근거로 Skill을 자동으로 적용할지 판단합니다.</p>
+<p>즉 <code>description</code>이 곧 트리거 역할을 합니다.</p>
+<p><a href="https://github.com/&lt;GITHUB_OWNER&gt;/&lt;REPOSITORY&gt;/tree/main/.claude/skills">교육생분들이 보고 계신 이 교안도 claude code 를 통해 만들었습니다. 만들면서 재사용되는 작업 흐름들은 skill 화 시켜놓았습니다.</a></p>
+<p>이 중 <code>doc-polish</code> 라는 skill 이 있는데, 윤문을 하는 작업을 수행합니다.</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/claude_code/skill-frontmatter.png" data-desc-position="bottom"><img alt="doc-polish skill" src="../../media/claude_code/skill-frontmatter.png"></a></p>
+<h2 id="언제-로드되는가">언제 로드되는가<a class="headerlink" href="#언제-로드되는가" title="Permanent link">¶</a></h2>
+<p>Skill 목록(이름과 설명)은 컨텍스트에 상시 존재합니다.</p>
+<p>관련 상황이 오면, 또는 <code>/skill-name</code>으로 직접 부르면 그때 본문 전체가 로드됩니다.</p>
+<p>skill 이 호출된 후 전체 파일이 로드 된 이후에 어떻게 돌아가는지는 아래 심화에서 자세히 다룹니다.</p>
+<h2 id="파일-구성과-배치-위치">파일 구성과 배치 위치<a class="headerlink" href="#파일-구성과-배치-위치" title="Permanent link">¶</a></h2>
+<p>Skill은 폴더 하나로 이뤄집니다.</p>
+<p><code>SKILL.md</code>만 필수이고, 참조 자료·스크립트는 지원 파일로 분리해 필요할 때만 로드하게 합니다.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>skill-name/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  SKILL.md        # 필수 - 지침 본문
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  template.md     # 선택 - 지원 파일
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  examples/       # 선택
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  scripts/        # 선택
+</span></code></pre></div>
+<p>배치 위치에 따라 적용 범위가 달라집니다.</p>
+<table>
+<thead>
+<tr>
+<th>위치</th>
+<th>경로</th>
+<th>적용 대상</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enterprise</td>
+<td>관리 설정</td>
+<td>조직 전체</td>
+</tr>
+<tr>
+<td>Personal</td>
+<td><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code></td>
+<td>모든 프로젝트</td>
+</tr>
+<tr>
+<td>Project</td>
+<td><code>.claude/skills/&lt;name&gt;/SKILL.md</code></td>
+<td>이 프로젝트만</td>
+</tr>
+<tr>
+<td>Plugin</td>
+<td><code>&lt;plugin&gt;/skills/&lt;name&gt;/SKILL.md</code></td>
+<td>플러그인 활성 위치</td>
+</tr>
+</tbody>
+</table>
+<p>같은 이름이 겹치면 상위 배치 위치가 하위를 <strong>Enterprise &gt; Personal &gt; Project</strong> 순으로 재정의합니다.</p>
+<p>사용자 정의 명령어(custom command)도 Skill로 병합되었습니다.</p>
+<p><code>.claude/commands/deploy.md</code>와 <code>.claude/skills/deploy/SKILL.md</code>는 똑같이 <code>/deploy</code>를 만듭니다.</p>
+<h2 id="만드는-절차">만드는 절차<a class="headerlink" href="#만드는-절차" title="Permanent link">¶</a></h2>
+<ol>
+<li>배치 위치를 고릅니다. 이 프로젝트에서만 쓰면 <code>.claude/skills/&lt;name&gt;/</code>, 모든 프로젝트에서 쓰면 <code>~/.claude/skills/&lt;name&gt;/</code>에 폴더를 만듭니다.</li>
+<li>그 폴더에 <code>SKILL.md</code>를 만듭니다.</li>
+<li>frontmatter에 <code>description</code>을 적습니다. Skill이 무엇을 하고 언제 쓰는지 쓰면 됩니다. Claude는 이 문구를 보고 자동 적용 시기를 판단합니다.</li>
+<li>본문에 따라 할 절차를 적습니다. 긴 참조 자료·스크립트는 지원 파일로 분리합니다.</li>
+<li><code>/skill-name</code>으로 직접 불러 동작을 확인합니다.</li>
+</ol>
+<div class="admonition important">
+<p class="admonition-title"><code>SKILL.md</code>는 500줄 이하로 쓰는 편이 좋습니다.</p>
+</div>
+<h2 id="프롬프트로-간단히-만들기">프롬프트로 간단히 만들기<a class="headerlink" href="#프롬프트로-간단히-만들기" title="Permanent link">¶</a></h2>
+<p>위에 서술한 절차에 따라 skill 을 만들어도 되지만,</p>
+<p>작업을 하며 반복되는 작업 흐름이 있다면,</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>내가<span class="w"> </span>방금<span class="w"> </span>한<span class="w"> </span>작업을<span class="w"> </span>skill<span class="w"> </span>화<span class="w"> </span>시켜줘
+</span></code></pre></div>
+<p>라고 프롬프팅을 해도 자동으로 만들어 줍니다.</p>
+<h2 id="subagent와의-차이">Subagent와의 차이<a class="headerlink" href="#subagent와의-차이" title="Permanent link">¶</a></h2>
+<p>Skill은 기본적으로 주 대화 컨텍스트 안에서 인라인으로 실행됩니다.</p>
+<p>격리된 컨텍스트에서 요약만 돌려받는 Subagent와 다른 지점입니다.</p>
+<p><strong>재사용할 prompt나 workflow를 주 대화 안에서 쓰고 싶으면 Skill을</strong></p>
+<p><strong>main context에 필요 없는 긴 출력을 따로 실행하고 싶다면 Subagent를 사용합니다.</strong></p>
+<p>둘은 완전히 배타적이지 않습니다.</p>
+<p>물론 Skill의 frontmatter 에 <code>context: fork</code>를 주면 Skill도 격리된 Subagent 컨텍스트에서 실행됩니다.</p>
+<p>Subagent를 만드는 방법은 <a href="../what-is-subagent/">Subagent 개념</a>을 보세요.</p>
+<h2 id="심화-skill-로딩은-내부적으로-어떻게-동작하는가">(심화) SKILL 로딩은 내부적으로 어떻게 동작하는가<a class="headerlink" href="#심화-skill-로딩은-내부적으로-어떻게-동작하는가" title="Permanent link">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">건너뛰어도 무방합니다</p>
+<p>이 절은 Skill이 언제, 얼마나 컨텍스트를 차지하는지 세부 동작이 궁금할 때만 읽으세요. 앞서 다룬 "언제 로드되는가"만으로도 개념 이해에는 충분합니다.</p>
+</div>
+<p>이 절에서는 Skill이 컨텍스트 윈도우(context window)에 들어오고 나가는 과정을 좀 더 들여다봅니다.</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/concepts/skill-loading-flow.png" data-desc-position="bottom"><img alt="Skill이 목록 대기부터 호출, 본문 로드, 세션 유지까지 이어지는 흐름" src="../../media/concepts/skill-loading-flow.png"></a></p>
+<div class="admonition important">
+<p class="admonition-title">Skill 목록은 항상 컨텍스트 윈도우에 로드되지만, 크기에는 상한이 있습니다.</p>
+<p>Skill 목록은 각 Skill의 이름(name)과 짧은 설명(description)을 이어 붙여 구성됩니다.</p>
+<p>시스템은 이렇게 이어 붙인 텍스트를 1,536자에서 잘라냅니다.</p>
+<p>이 문자 수 상한 덕분에, Skill 개수가 아무리 많아도 목록이 컨텍스트 윈도우를 끝없이 차지하지 않습니다.</p>
+<p>시스템은 정해진 토큰 예산 안에서 목록을 관리합니다.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">한 번 로드된 Skill 본문은 해당 세션이 끝날 때까지 컨텍스트 윈도우에 유지됩니다."</p>
+<p>모델은 Skill 본문을 한 번 로드하면, 그 본문을 세션 내내 컨텍스트 윈도우에 유지합니다.</p>
+<p>책을 펼쳐 책상에 올려두면 대화가 끝날 때까지 펼쳐진 채로 있는 것과 같습니다.</p>
+<p>이 유지 방식 덕분에, 모델은 같은 세션 안에서 동일한 Skill을 다시 읽어 들일 필요가 없습니다.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">모델이 같은 Skill을 다시 호출해도 본문은 중복으로 쌓이지 않습니다."</p>
+<p>모델이 한 세션 안에서 동일한 Skill을 재호출하면, 시스템은 본문 전체를 다시 컨텍스트 윈도우에 넣지 않습니다.</p>
+<p>대신 시스템은 "이미 로드됨"이라는 짧은 표시만 추가합니다.</p>
+<p>이 처리 방식은 동일한 내용이 컨텍스트 윈도우에 중복 적재되는 것을 방지합니다.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">자동 압축이 일어나면 Skill 본문은 일부만 남습니다</p>
+<p>자동 압축(대화가 길어져 Claude가 오래된 내용을 요약해 자리를 비우는 과정) 시에는 각 Skill의 가장 최근 호출에서 처음 5,000토큰을 다시 붙입니다.</p>
+<p>이 과정은 다시 붙는 Skill들에 25,000토큰의 결합 예산을 나눠 배정하고, 예산을 넘는 오래된 것부터 버립니다.</p>
+</div>
+<h2 id="심화-frontmatter-필드">(심화) frontmatter 필드<a class="headerlink" href="#심화-frontmatter-필드" title="Permanent link">¶</a></h2>
+<ul>
+<li>아래 필드는 자동 호출을 막거나 쓸 도구를 좁히는 등 세밀하게 조정하고 싶을 때만 필요합니다.</li>
+</ul>
+<p>frontmatter는 <code>SKILL.md</code> 맨 위에 두는 설정 칸입니다.</p>
+<p>필드는 모두 선택이며, <code>description</code>만 권장입니다.</p>
+<table>
+<thead>
+<tr>
+<th>필드</th>
+<th>하는 일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>description</code></td>
+<td>Skill이 무엇을 하고 언제 쓰는지. Claude가 자동 적용 시기를 판단하는 근거입니다. 생략하면 본문 첫 문단을 쓰고, 1,536자에서 잘립니다.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Skill 이름</td>
+</tr>
+<tr>
+<td><code>when_to_use</code></td>
+<td>트리거 예시를 덧붙임</td>
+</tr>
+<tr>
+<td><code>disable-model-invocation</code></td>
+<td><code>true</code>면 Claude 자동 호출을 막고 사용자만 <code>/name</code>으로 호출</td>
+</tr>
+<tr>
+<td><code>user-invocable</code></td>
+<td><code>false</code>면 <code>/</code> 메뉴에서 숨겨 Claude만 호출</td>
+</tr>
+<tr>
+<td><code>allowed-tools</code> · <code>disallowed-tools</code></td>
+<td>쓸 수 있는 도구 제한</td>
+</tr>
+<tr>
+<td><code>context: fork</code></td>
+<td>격리된 Subagent 컨텍스트에서 Skill 실행</td>
+</tr>
+<tr>
+<td><code>agent</code></td>
+<td><code>context: fork</code> 시 쓸 Subagent 유형. 생략 시 <code>general-purpose</code></td>
+</tr>
+<tr>
+<td><code>paths</code></td>
+<td>경로 기반 자동 활성화</td>
+</tr>
+<tr>
+<td><code>model</code> · <code>effort</code> · <code>hooks</code> · <code>arguments</code> · <code>argument-hint</code></td>
+<td>모델·비용·훅·인자 제어</td>
+</tr>
+</tbody>
+</table>
+<p><code>disable-model-invocation: true</code>는 "Claude가 알아서 부르지 말고 내가 부를 때만 실행하라"는 뜻입니다.</p>
+<p><code>allowed-tools</code>는 이 Skill이 손댈 수 있는 도구를 몇 개로 좁히는 안전장치입니다.</p>
+<p>대부분은 이런 필드 없이 <code>description</code>만으로 충분합니다.</p>
+<p>이 필드들을 실제로 조합하면 어떤 모습인지, 예시 하나를 통째로 펼쳐 봅니다.</p>
+<details class="ailab-code">
+<summary>코드 예시 펼치기 - pr-summary SKILL.md</summary>
+<div class="ailab-code-window">
+<div class="ailab-code-titlebar">
+<span class="ailab-code-dots"><span></span><span></span><span></span></span>
+<span class="ailab-code-filename">.claude/skills/pr-summary/SKILL.md</span>
+</div>
+
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>---
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>name: pr-summary
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>description: 현재 PR의 변경 사항을 요약하고 리스크를 짚어준다. PR 리뷰 준비, diff 확인, 커밋 메시지 작성 시 사용.
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>when_to_use: &gt;
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  "이 PR 요약해줘", "뭐가 바뀌었어?", "리뷰 전에 diff 정리해줘" 같은 요청에서 트리거.
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  파일 변경사항이 있는 git 저장소 안에서만 의미 있음.
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>disable-model-invocation: false
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>user-invocable: true
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>allowed-tools: Bash(gh *), Bash(git diff *), Read, Grep
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>disallowed-tools: Bash(git push *), Bash(git commit *)
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>context: fork
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>agent: Explore
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>paths: ["src/**/*.ts", "src/**/*.tsx"]
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>model: sonnet
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>effort: high
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>argument-hint: "[pr-number]"
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>arguments: [pr_number]
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>hooks:
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>  PreToolUse:
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    - matcher: Bash
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>      hooks:
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        - type: command
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>          command: echo "PR 요약 스킬 실행 중..."
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>---
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>## PR 컨텍스트
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>- PR diff: !`gh pr diff $pr_number`
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>- 변경된 파일: !`gh pr diff $pr_number --name-only`
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>## 작업 지시
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>위 diff를 바탕으로 PR #$pr_number 를 리뷰어 관점에서 요약하라:
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>1. **무엇이 바뀌었나** - 2~3문장 요약
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>2. **왜 바뀌었나** - PR 설명에서 동기 추출
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>3. **영향받는 파일** - 관심사별 그룹핑
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>4. **리스크 영역** - 꼼꼼히 봐야 할 파일/패턴
+</span></code></pre></div>
+
+</div>
+</details>
+<h2 id="심화-호출-권한과-로드-시점">(심화) 호출 권한과 로드 시점<a class="headerlink" href="#심화-호출-권한과-로드-시점" title="Permanent link">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">지금은 건너뛰어도 됩니다</p>
+<p>"누가 이 Skill을 부를 수 있는가"를 나눠 정하고 싶을 때만 필요합니다. 기본값은 사용자와 Claude 모두 부를 수 있습니다.</p>
+</div>
+<p>앞의 몇몇 frontmatter 필드는 "누가 호출할 수 있는지"를 세분합니다.</p>
+<p>조합에 따라 사용자만, Claude만, 또는 둘 다 부를 수 있게 나뉩니다.</p>
+<p>표의 "컨텍스트 로드 시점"은 Skill의 설명·본문이 Claude의 작업 화면(컨텍스트)에 언제 올라오는지를 뜻합니다.</p>
+<table>
+<thead>
+<tr>
+<th>frontmatter</th>
+<th>사용자 호출</th>
+<th>Claude 호출</th>
+<th>컨텍스트 로드 시점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(기본값)</td>
+<td>예</td>
+<td>예</td>
+<td>설명은 항상 컨텍스트에, 호출 시 전체 로드</td>
+</tr>
+<tr>
+<td><code>disable-model-invocation: true</code></td>
+<td>예</td>
+<td>아니오</td>
+<td>설명도 컨텍스트에 없음, 사용자가 호출할 때만 전체 로드</td>
+</tr>
+<tr>
+<td><code>user-invocable: false</code></td>
+<td>아니오</td>
+<td>예</td>
+<td>설명은 항상 컨텍스트에, 호출 시 전체 로드</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  맨위로
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.tracking", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.select"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\ud074\ub9bd\ubcf4\ub4dc\uc5d0 \ubcf5\uc0ac\ub428", "clipboard.copy": "\ud074\ub9bd\ubcf4\ub4dc\ub85c \ubcf5\uc0ac", "search.result.more.one": "\uc774 \ubb38\uc11c\uc5d0\uc11c 1\uac1c\uc758 \uac80\uc0c9 \uacb0\uacfc \ub354 \ubcf4\uae30", "search.result.more.other": "\uc774 \ubb38\uc11c\uc5d0\uc11c #\uac1c\uc758 \uac80\uc0c9 \uacb0\uacfc \ub354 \ubcf4\uae30", "search.result.none": "\uac80\uc0c9\uc5b4\uc640 \uc77c\uce58\ud558\ub294 \ubb38\uc11c\uac00 \uc5c6\uc2b5\ub2c8\ub2e4", "search.result.one": "1\uac1c\uc758 \uc77c\uce58\ud558\ub294 \ubb38\uc11c", "search.result.other": "#\uac1c\uc758 \uc77c\uce58\ud558\ub294 \ubb38\uc11c", "search.result.placeholder": "\uac80\uc0c9\uc5b4\ub97c \uc785\ub825\ud558\uc138\uc694", "search.result.term.missing": "\ud3ec\ud568\ub418\uc9c0 \uc54a\uc740 \uac80\uc0c9\uc5b4", "select.version": "\ubc84\uc804 \uc120\ud0dd"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/service-switcher-config.js?h=6f8d7424"></script>
+      
+        <script src="../../javascripts/asciinema-embed.js?h=353c4861"></script>
+      
+        <script src="../../javascripts/asciinema-player.min.js?h=a84bd73f"></script>
+      
+        <script src="../../javascripts/header-context.js?h=266df885"></script>
+      
+        <script src="../../javascripts/idle-cursor.js?h=94626cf6"></script>
+      
+        <script src="../../javascripts/learning-tips.js?h=290384e6"></script>
+      
+        <script src="../../javascripts/link-target.js?h=641710d9"></script>
+      
+        <script src="../../javascripts/markdown-editor.js?h=9bd465e9"></script>
+      
+        <script src="../../javascripts/mermaid.min.js?h=581ed7d7"></script>
+      
+        <script src="../../javascripts/minimap.js?h=9c55e98a"></script>
+      
+        <script src="../../javascripts/nav-highlight.js?h=02906cf1"></script>
+      
+        <script src="../../javascripts/service-switcher.js?h=4cae2e7b"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

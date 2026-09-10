@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>stage5 오라클 하네스 - 내부 동작 (두 겹 검증 + 루프백)</title>
+<script src="vendor/cytoscape.min.js"></script>
+<style>
+  :root{
+    --line:#d9dde3; --ink:#1a1d21; --muted:#5b6472; --accent:#d97757; --pick:#2f6df0;
+  }
+  html,body{height:100%;margin:0;overflow:hidden;background:#fff;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;}
+  #app{display:flex;flex-direction:column;height:100%;}
+  /* 상단바 */
+  #topbar{padding:10px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex:0 0 auto;}
+  #topbar h1{font-size:20px;margin:0;font-weight:800;}
+  #topbar .sub{font-size:14px;color:var(--muted);}
+  /* 메인 3분할 */
+  #main{flex:1 1 auto;display:flex;min-height:0;}
+  .panel{display:flex;flex-direction:column;min-height:0;min-width:0;}
+  #ctxPanel{flex:1 1 0;border-right:1px solid var(--line);}
+  #centerWrap{flex:2 1 0;position:relative;}
+  #rightPanel{flex:1 1 0;border-left:1px solid var(--line);display:flex;flex-direction:column;}
+  .phead{padding:9px 14px;font-size:15px;font-weight:800;border-bottom:1px solid var(--line);
+    background:#fafbfc;color:#2a2f36;flex:0 0 auto;}
+  /* 좌 context */
+  #ctxList{overflow-y:auto;padding:12px;flex:1 1 auto;}
+  .ctxItem{position:relative;border:1px solid var(--line);border-left-width:7px;border-radius:9px;
+    padding:9px 12px;margin-bottom:9px;font-size:15px;line-height:1.35;background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  .ctxItem .k{font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;opacity:.65;display:block;margin-bottom:2px;}
+  .ctxItem.recent{border-color:var(--accent);border-left-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(217,119,87,.14);}
+  #ctxCount{padding:9px 14px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);flex:0 0 auto;}
+  /* 중앙 */
+  #flow{position:absolute;inset:0;}
+  #controls{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;
+    display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.94);
+    border:1px solid var(--line);border-radius:999px;padding:6px 10px;box-shadow:0 3px 12px rgba(0,0,0,.08);}
+  #controls button{font-size:18px;border:1px solid var(--line);background:#fff;color:var(--ink);
+    width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  #controls button:hover{background:#f2f4f7;}
+  #playBtn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  #stepInd{font-size:15px;font-weight:800;min-width:64px;text-align:center;color:#2a2f36;}
+  #gateBtn{display:none;font-size:14px!important;font-weight:800;width:auto!important;padding:0 16px;border-radius:999px!important;
+    background:#e6b800!important;color:#3a2f00!important;border-color:#d4a017!important;}
+  #dragHint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;
+    background:rgba(255,255,255,.9);border:1px solid #ddd;border-radius:999px;
+    padding:6px 16px;font-size:13px;color:#666;pointer-events:none;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+  #legend{position:absolute;top:12px;right:12px;z-index:20;background:rgba(255,255,255,.95);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;max-width:230px;box-shadow:0 3px 12px rgba(0,0,0,.06);}
+  #legend h4{margin:0 0 6px;font-size:12px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;}
+  #legend .row{display:flex;align-items:center;gap:7px;margin:3px 0;line-height:1.2;}
+  #legend .dot{width:15px;height:15px;border-radius:4px;border:2px solid #999;flex:0 0 auto;}
+  #legend .sep{height:1px;background:var(--line);margin:7px 0;}
+  /* 우측 */
+  #tree{flex:0 0 36%;overflow-y:auto;padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px;}
+  .tnode{white-space:pre;padding:2px 4px;border-radius:5px;cursor:default;line-height:1.5;}
+  .tnode.file{cursor:pointer;}
+  .tnode.file:hover{background:#f2f4f7;}
+  .tnode.dir{color:#6b7280;font-weight:700;}
+  .tnode.active{background:#fff3ee;box-shadow:inset 0 0 0 2px var(--accent);font-weight:800;}
+  .tnode.touched{background:#f6f8fa;}
+  .tnode .badge{font-size:11px;font-weight:800;padding:0 6px;border-radius:8px;margin-left:6px;vertical-align:middle;}
+  .b-read{background:#dde8ff;color:#274bb5;}
+  .b-write{background:#ffe0d2;color:#b64318;}
+  .b-run{background:#d3f0dd;color:#1c7a41;}
+  #viewer{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+  #vtabs{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid var(--line);flex:0 0 auto;background:#fafbfc;}
+  #vtabs button{font-size:12px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #vtabs button.on{background:#2a2f36;color:#fff;border-color:#2a2f36;}
+  #vpath{padding:5px 10px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);flex:0 0 auto;background:#fff;}
+  #viewerBody{flex:1 1 auto;overflow:auto;margin:0;padding:12px 14px;font-size:13px;line-height:1.5;
+    font-family:"SFMono-Regular",Menlo,Consolas,"D2Coding",monospace;white-space:pre-wrap;word-break:break-word;background:#fff;}
+  /* 하단 상세 밴드 */
+  #detail{flex:0 0 auto;border-top:1px solid var(--line);padding:11px 18px;background:#fbfcfd;min-height:96px;}
+  #detail .note{font-size:14px;font-weight:800;margin-bottom:4px;}
+  #detail .title{font-size:17px;font-weight:800;}
+  #detail .desc{font-size:15px;color:#2a2f36;margin-top:3px;line-height:1.45;}
+  #detail .why{font-size:14px;color:var(--muted);margin-top:3px;line-height:1.4;}
+  #detail.keyinsight{background:linear-gradient(90deg,#fff7f3,#fff);border-top:3px solid var(--accent);}
+  #detail .kihead{color:var(--accent);font-weight:900;font-size:13px;letter-spacing:.05em;text-transform:uppercase;}
+  .pill{display:inline-block;font-size:12px;font-weight:800;padding:1px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;}
+  .pill.human{background:#fff0e0;color:#b45d16;border:1px solid #f0c79a;}
+  .pill.ai{background:#e7efff;color:#2b52b8;border:1px solid #c2d3f7;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1>stage5 오라클 하네스 - 내부 동작</h1>
+    <span class="sub">NVIDIA 적정가치 판단 · <b>두 겹 오라클</b>(정형 hook + 비정형 subagent) · 실패 시 루프백 재시도</span>
+  </div>
+  <div id="main">
+    <!-- 좌: context 누적 -->
+    <div id="ctxPanel" class="panel">
+      <div class="phead">🧠 컨텍스트에 쌓인 것</div>
+      <div id="ctxList"></div>
+      <div id="ctxCount"></div>
+    </div>
+    <!-- 중: 흐름 -->
+    <div id="centerWrap" class="panel">
+      <div id="controls">
+        <button id="rewindBtn" title="이전 (←)">◀</button>
+        <button id="playBtn" title="재생/일시정지">▶</button>
+        <button id="forwardBtn" title="다음 (→)">▶▶</button>
+        <span id="stepInd">1 / 12</span>
+        <button id="fitBtn" title="전체 보기(Fit) - 전체 흐름을 한 화면에" style="width:auto;padding:0 14px;border-radius:999px;font-size:14px;font-weight:700;">🔍 전체 보기</button>
+        <button id="gateBtn" title="사람이 진행을 승인">👤 진행</button>
+      </div>
+      <div id="legend"></div>
+      <div id="flow"></div>
+      <div id="dragHint">💡 노드를 드래그하면 위치를 옮길 수 있어요</div>
+    </div>
+    <!-- 우: 트리 + 뷰어 -->
+    <div id="rightPanel" class="panel">
+      <div class="phead">📁 프로젝트 구조</div>
+      <div id="tree"></div>
+      <div id="viewer">
+        <div id="vtabs"></div>
+        <div id="vpath">파일을 선택하세요</div>
+        <pre id="viewerBody">노드를 클릭하면 그 단계가 읽고/쓰고/실행하는 실제 파일 원문이 여기 표시됩니다.</pre>
+      </div>
+    </div>
+  </div>
+  <div id="detail"></div>
+</div>
+
+<!-- ===== 실제 파일 원문 (지어내지 않음, 원본 그대로 임베드) ===== -->
+<script type="text/plain" data-path="CLAUDE.md">
+# NVIDIA 적정가치 판단 프로젝트 - 분석 표준 (stage5: loop 기준=암묵지 형식지화)
+
+이 프로젝트는 **한 종목(NVIDIA)이 저평가/적정/고평가인지 종합 판단**하는 리포트를 쓰는
+실습용 harness다. 한 과제 안에서 정형 데이터(재무제표→지표)와 비정형 데이터(리포트·뉴스→
+정성 판단)를 모두 처리하고 종합한다. stage5은 종합 판정을 좌우하는 미래 예상 가정(목표
+주가배수·성장률)의 정상 범위를 golden-reports/에서 직접 역산해 형식지화하는 단계다.
+
+## 산출물 위치
+- 리포트는 반드시 reports/fair-value.md 한 파일에 쓴다.
+
+## 리포트 필수 섹션 (5개, 순서 유지)
+1. ## 종목 개요 - 종목명·코드·기준일·현재 주가·시가총액
+2. ## 정량 분석 (정형) - 지표를 계산식과 함께 표로. data/financials.json이 원천.
+3. ## 정성 분석 (비정형) - raw/의 리포트·뉴스에서 긍정 요인/우려 요인을 균형 있게.
+4. ## 종합 판정 - 정량 신호 + 정성 판단을 종합해 저평가/적정/고평가 중 하나 + 근거.
+5. ## 결론 - 투자의견 + 판정을 좌우한 미래 예상 가정을 명시 + 유의점.
+맨 끝에 ## 출처 섹션.
+
+## 정량 지표 규칙 (형식 고정 - 뒤 단계에서 이 값을 재계산해 검증)
+| 지표 | 계산식 | 예(NVIDIA FY2026) |
+| 주당순이익(EPS) | 희석주당이익(재무제표) | $4.90 |
+| 주가배수(PER) | 주가 ÷ 주당순이익 | 44.3 |
+| 매출 증가율 | (당기매출−전기매출) ÷ 전기매출 | 65.5% |
+| 영업이익률 | 영업이익 ÷ 매출액 | 60.4% |
+| 순이익 증가율 | (당기순이익−전기순이익) ÷ 전기순이익 | 64.7% |
+- 모든 정량 수치엔 인라인 출처: `... 순이익 $120.1B[출처: data/financials.json]`.
+
+## 미래 예상 가정 형식 (stage5 - 검증 스크립트가 이 형식을 읽는다)
+## 결론 아래 `### 판정 근거 미래 예상 가정` 소제목에 아래 2줄을 이 형식 그대로 넣는다:
+    - 목표 주가배수: 29.0배
+    - 장기 이익 성장률: 27.5%
+- 두 값은 assumptions-bands.md의 적정 범위 안(목표 주가배수 18~35배, 성장률 20~44%)에서 정한다.
+- 범위를 벗어나려면 결론에 `적정범위 밖 근거: <근거>` 마커를 단다(근거의 질은 subagent가 판정).
+
+## 채점·검증 기준 (오라클 = 정형 hook + 비정형 subagent 두 겹)
+- 정형(결정론) hook scripts/validate_fair_value.py: 형식·정량 지표 재계산 + 미래 예상 가정이
+  적정 범위 안인지 강제(exit 2). 범위 밖인데 마커가 없으면 실패.
+- 비정형(주관) subagent .claude/agents/fair-value-reviewer.md: 정성 분석 균형·근거·종합 일관성
+  + 범위 밖 근거의 설득력을 채점(PASS≥9/12).
+- 정형(hook)과 비정형(subagent)이 한 파이프라인에 공존한다.
+
+## 워크플로우 (loop)
+1. golden-reports/ 5건 → assumptions-bands.md 범위가 어떻게 역산됐는지 확인(형식지화 이해)
+2. data/financials.json + raw/ 읽기 → /fair-value-report NVIDIA → reports/fair-value.md
+3. fair-value-reviewer subagent로 정성·종합·범위밖 근거 채점
+4. 세션 종료 시 Stop hook이 형식·지표·미래 예상 가정 범위 검증 → 반영해 재시도
+5. hook 통과 + 리뷰어 PASS 될 때까지 반복
+</script>
+
+<script type="text/plain" data-path=".claude/skills/fair-value-report/SKILL.md">
+---
+name: fair-value-report
+description: data/financials.json(정형)과 raw/의 리포트·뉴스(비정형)를 종합해 reports/fair-value.md에 종목 적정가치 판단 리포트를 만든다. "적정가치 리포트", "/fair-value-report <종목>", "저평가인지 판단해줘"라고 할 때 사용.
+---
+
+# 적정가치 판단 리포트 작성 (정형+비정형 종합)
+
+1. 정형 읽기: data/financials.json에서 재무·주가 원자료를 읽고 CLAUDE.md 표대로
+   주당순이익·주가배수(PER)·매출증가율·영업이익률·순이익증가율을 직접 계산한다(계산식 표기).
+2. 비정형 읽기: raw/뉴스-*.md·raw/애널리스트-*.md·raw/적정가-가정-*.md에서
+   성장성·리스크·업황·목표주가·적정가 가정을 뽑는다. 긍정/우려 요인을 균형 있게, 출처 인라인.
+3. 종합 판정: 정량 신호(현재 실적 기준 지표)와 정성 판단(미래 예상 가정)을 종합해
+   저평가/적정/고평가 중 하나를 고른다. 둘이 충돌하면 어느 쪽을 왜 더 신뢰하는지 밝히고,
+   판정을 좌우한 미래 예상 가정(목표 주가배수·성장률)을 명시한다.
+4. CLAUDE.md 필수 섹션(종목 개요 → 정량 분석 → 정성 분석 → 종합 판정 → 결론 → 출처)대로
+   reports/fair-value.md를 쓴다.
+5. 소스별 수치가 다르면 원본(financials.json) 기준으로 재조정하고 차이를 명시한다.
+</script>
+
+<script type="text/plain" data-path="data/financials.json">
+{
+  "_note": "실제 데이터(가상 아님). 정형 원천 = NVIDIA Corp 10-K (FY2026, 회계연도 종료 2026-01-25, SEC EDGAR CIK 0001045810). 주가·시총 = stockanalysis.com 실시간(2026-08-20). 금액 단위: 백만달러.",
+  "_data_noise": "stockanalysis.com은 최근 4개 분기(TTM) 기준 주가배수를 33.2배로 표기하나, 이 파일의 FY2026 연간 주당순이익($4.90)으로 다시 계산하면 44.3배 - 어느 기간을 기준으로 삼느냐에 따라 다르다. 이 파일(FY2026 연간 10-K, 원본 자료)을 기준으로 삼는다.",
+  "종목": "NVIDIA Corporation",
+  "종목코드": "NVDA",
+  "기준": "FY2026 10-K(연결, 회계연도 종료 2026-01-25), 조회일 2026-08-20",
+  "단위": "백만달러(USD Million)",
+  "시장": { "주가": 216.85, "주가_기준일": "2026-08-20", "시가총액_십억달러": 5250 },
+  "주당순이익_달러": { "FY2026": 4.90, "FY2025": 2.94 },
+  "current": { "매출액": 215938, "영업이익": 130387, "당기순이익": 120067 },
+  "prior":   { "매출액": 130497, "당기순이익": 72880 }
+}
+</script>
+
+<script type="text/plain" data-path="assumptions-bands.md">
+# 판정 가정 적정 범위 - golden-reports/에서 역산 (암묵지 형식지화, 이 stage의 페이로드)
+
+golden-reports/ 5개 리포트가 NVIDIA에 대해 쓴 미래 예상 가정(목표 주가배수·성장률)을
+대조해 정상 범위를 직접 역산했다. stage4의 지표 계산은 이미 공식이 있던 것을 옮겨 담은
+것이지만, 이 범위는 아무도 정해주지 않은 것을 내가 golden에서 역산해 형식지화한 것이다.
+
+## 1. 골든 리포트가 쓴 가정 (관측)
+| 리포트 | 목표 주가배수 | 장기 성장률 | 스탠스 |
+| 05 학술 보수적 계산모델 | 18.1배(역산) | 20.0%(추정) | 프리미엄 소멸·성숙기 진입 |
+| 02 SimplyWall 계산모델(이후) | 28.93배 | 37.36% | 미세 하향 재조정 |
+| 01 SimplyWall 계산모델(이전) | 29.02배 | 37.36% | AI 고성장 지속, 배수는 정상화 |
+| 03 애널리스트 평균 | 29.0배 | 27.5% | 시장 의견 중심값 |
+| 04 최고 낙관 시나리오 | 34.2배 | 43.87% | 프리미엄 유지, AI 슈퍼사이클 |
+
+## 2. 역산한 정상 범위 (채택값)
+| 가정 | 관측 범위 | 채택 범위 |
+| 목표 주가배수 | 18.1 ~ 34.2배 | **18.0 ~ 35.0배** |
+| 장기 성장률 | 20.0 ~ 43.87% | **20.0 ~ 44.0%** |
+- 채택값을 관측 최댓값·최솟값에 딱 맞추지 않고 소폭 여유를 둔 것 자체가 작은 판단이다.
+
+## 3. 함정 (형식지화는 판단을 없애는 게 아니다)
+- 범위 밖 가정도 정당한 근거가 있으면 유효하다 - 범위는 판단을 없애는 게 아니라 기본값을 준다.
+- 그래서 오라클은 두 겹이다: hook이 범위를 기본값으로 강제하고(범위 밖이면 근거 요구),
+  fair-value-reviewer subagent가 그 근거가 설득력 있는지 판정한다.
+
+## 4. REVEAL
+- stage4의 지표 계산 = 이미 공식이 있던 것을 hook에 옮겨 담음.
+- stage5의 가정 범위 = golden 리포트에서 직접 역산해 형식지화.
+- 둘 다 "판정 기준을 형식지화"라는 같은 종류의 작업이고, 차이는 남이 해놨나 / 내가 해야 하나뿐이다.
+</script>
+
+<script type="text/plain" data-path="data/assumptions.json">
+{
+  "_note": "assumptions-bands.md의 기계 판독용 거울. golden-reports/ 5건에서 역산한 미래 예상 가정의 적정 범위.",
+  "종목": "NVIDIA",
+  "derived_from": "golden-reports/ 5개 리포트 역산",
+  "target_pe": { "min": 18.0, "max": 35.0 },
+  "growth_pct": { "min": 20.0, "max": 44.0 }
+}
+</script>
+
+<script type="text/plain" data-path="golden-reports/03-애널리스트-평균.md">
+# [골든 리포트] 애널리스트 평균 의견 (실제 관측 가정)
+
+> ✅ 실제 관측 가정(가상 아님). 61명 애널리스트 의견의 중심값.
+> [출처: stockanalysis.com/stocks/nvda/forecast, S&P Global 애널리스트 집계]
+
+## 미래 예상 가정
+- 목표 주가배수(2026 달력연도 기준): 약 29.0배
+- 장기 성장률(3년 기준, 25~30% 범위의 중간): 27.5%
+- (참고: 할인율은 명시 안 됨 - 애널리스트 평균 목표가는 대개 개별 계산모델을 공개하지 않는다)
+- → 목표주가: $304.64~$305.86 (평균)
+
+## 근거 서술
+애널리스트 다수가 매수 의견. 이번 회계연도 매출 +83%, 다음 회계연도 +43.87% 성장 전망을
+반영한 중심값. 개별 애널리스트 61명의 목표가가 $250~$500로 넓게 퍼져 있다는 점 자체가,
+이 종목의 미래 예상 가정에 대한 견해차가 크다는 신호.
+
+(※ golden-reports/ 폴더에는 이 03 외에도 01 SimplyWall(이전)·02 SimplyWall(이후)·
+   04 최고낙관·05 학술보수 총 5건이 있고, 이 5건에서 assumptions-bands.md 범위가 역산됨.)
+</script>
+
+<script type="text/plain" data-path="raw/애널리스트-의견-2026.md">
+# [애널리스트] NVIDIA 목표주가·투자의견 요약 (실제 출처 기반 발췌)
+
+## 목표주가·투자의견 (매수 의견 우세, 그러나 목표가 편차 큼)
+- 애널리스트 61명의 평균 의견은 "적극 매수", 평균 목표주가 $304.64 또는 $305.86[출처: 검색 종합].
+- 61명 중 가장 높은 목표가 $500 / 가장 낮은 목표가 $250[출처: 검색 종합].
+
+## ★ 현재가($216.85)는 애널리스트 중 가장 낮은 목표가($250)보다도 낮다
+- NVIDIA는 애널리스트 61명의 목표주가가 전부($250~$500) 현재가보다 높다. 다만 현재 실적 기준
+  주가배수(PER 33~44배)는 절대적으로 보면 비싸 보인다 - 이 차이를 정성 분석에서 다뤄야 한다.
+
+## 미래 실적을 반영한 주가배수
+- 미래 예상 실적 기준 주가배수 34.2배 - 반도체 업종 평균보다 89% 더 높은 수준[출처: 검색 종합].
+- 2026년 달력연도 기준으로는 미래 예상 주가배수 약 29배[출처: 검색 종합].
+- 애널리스트들은 3년 뒤에도 순이익·매출 성장률 25~30%대를 예상[출처: 검색 종합].
+
+## 우려 요인
+- 맞춤형 반도체 확산: 구글 TPU, 아마존 Trainium, MS 커스텀 가속기 - 비중 2025년 20.9% →
+  2026년 27.8% 전망, 2028년 데이터센터 연산의 37%까지[출처: fool.com].
+- AMD 경쟁 심화(MI300), AMD 2026년 주당순이익 +64% 성장 자체 전망[출처: 검색 종합].
+- 높은 주가배수의 위험 - 완벽한 성장을 전제하므로 기대치가 조금만 꺾여도 배수가 낮아질 수 있음.
+</script>
+
+<script type="text/plain" data-path="raw/뉴스-NVIDIA-2026Q2전망.md">
+# [뉴스/실적 전망] NVIDIA 2026Q2(FY2027 Q2) 실적·업황 (실제 출처 기반 발췌)
+
+> ✅ 실제 데이터. 조회 시점(2026-08-20/21) 기준 아직 발표 전인 예상치다 - 리포트에 명시해야 한다.
+
+## 실적 발표 일정
+- FY2027 Q2 실적 발표: 2026-08-26 예정[출처: intellectia.ai].
+
+## 실적 예상치 (아직 확정 실적 아님)
+- 애널리스트 40인 평균 예상: 매출 $91.85B, 주당순이익 $2.08[출처: rexshares.com].
+- 일부 애널리스트는 매출 $93~95B(작년 동기 대비 +67~75%)까지 예상[출처: intellectia.ai].
+- 데이터센터용 매출 $25B+ 예상 - Blackwell 생산 확대가 관전 포인트[출처: rexshares.com].
+
+## FY2026 확정 실적 - data/financials.json 원천
+- 매출 $215.9B(+65%), 영업이익 $130.4B, 순이익 $120.1B(+65%)[출처: nvidianews.nvidia.com].
+
+## 주가 흐름
+- 2026-08-20 종가 $216.85, 시가총액 한때 $4.5조 돌파[출처: stockanalysis.com].
+
+## 우려 요인 배경
+- 구글·아마존·MS의 자체 맞춤형 반도체 확산 - 비중 2025년 20.9% → 2026년 27.8%,
+  2028년 데이터센터 연산의 37%까지[출처: fool.com].
+- AMD MI300 시리즈 도전, AMD 2026년 주당순이익 +64% 성장 전망[출처: 검색 종합].
+</script>
+
+<script type="text/plain" data-path="raw/적정가-가정-2026.md">
+# [적정가 계산 가정] NVIDIA 적정가 산정 가정 (실제 출처 기반)
+
+## 적정가 계산모델의 가정 개정 (Simply Wall St 커뮤니티, 이전 → 이후)
+| 가정 | 이전 | 이후 | 효과 |
+| 미래 예상 주가배수 | 29.02배 | 28.93배 | ↓ (미세) |
+| 매출 성장률 | 37.36% | 37.36% | 변화 없음 |
+| → 계산된 적정가 | $269.23 | $268.22 | -0.37% |
+
+## 애널리스트 간 목표주가 편차 (진짜 변주 지점)
+- 평균 목표주가 $304.64~305.86, 최고 $500 / 최저 $250 - 이 편차가 2배에 가깝다.
+- Simply Wall St 계산모델 적정가($268.22)는 애널리스트 평균($305)보다 낮다.
+
+## 읽는 법 (이 예시의 핵심)
+- 현재 실적 기준 NVIDIA는 비싸다(주가배수 33~44배). 그런데 거의 모든 애널리스트 목표주가가
+  현재가($216.85)보다 높다 - "싸다"는 결론이 앞으로도 높은 성장률(25~30%)이 몇 년간 유지된다는
+  예상에 전적으로 의존한다.
+- 따라서 이 종목의 판정은 어떤 성장률·미래 주가배수를 쓰느냐에 달렸다. 그 적정 범위를 여러
+  리포트에서 역산해 명확한 기준으로 만드는 것이 이 실습의 마지막 단계다.
+</script>
+
+<script type="text/plain" data-path="reports/fair-value.md">
+# NVIDIA(NVDA) 적정가치 판단 리포트
+
+## 종목 개요
+| 항목 | 값 |
+| 종목명 | NVIDIA Corporation |
+| 종목코드 | NVDA (NASDAQ) |
+| 기준일 | FY2026 10-K / 조회일 2026-08-20 |
+| 현재주가 | $216.85[출처: data/financials.json] |
+| 시가총액 | 약 $5.25조[출처: data/financials.json] |
+
+## 정량 분석 (정형)
+| 지표 | 계산식 | 값 |
+| 주당순이익(EPS) | 희석주당이익(재무제표) | $4.90 [출처: data/financials.json] |
+| 주가배수(PER) | 216.85 ÷ 4.90 | 44.3배 |
+| 매출 증가율 | (215,938 − 130,497) ÷ 130,497 | 65.5% |
+| 영업이익률 | 130,387 ÷ 215,938 | 60.4% |
+| 순이익 증가율 | (120,067 − 72,880) ÷ 72,880 | 64.7% |
+- 현재 실적 기준으로는 극단적으로 비싸다: 주가배수 44.3배. TTM 기준으로는 33.2배(_data_noise).
+
+## 정성 분석 (비정형)
+### 긍정 요인
+1. 데이터센터·AI 인프라 수요 지속, Blackwell 생산 확대[출처: raw/뉴스-NVIDIA-2026Q2전망.md].
+2. 매출 성장 전망 지속(+83%, +43.87%), 3년 뒤에도 25~30% 성장 예상[출처: raw/애널리스트-의견-2026.md].
+### 우려 요인
+1. 맞춤형 반도체 확산(TPU 등) 2025년 20.9%→2026년 27.8%[출처: raw/뉴스-NVIDIA-2026Q2전망.md].
+2. AMD 경쟁 심화, 높은 주가배수의 위험[출처: raw/애널리스트-의견-2026.md].
+
+## 종합 판정
+이 종목의 최종 판정은 저평가이다(애널리스트 의견 근거).
+- 애널리스트 61명의 목표주가 전체($250~$500)가 현재가($216.85)보다 높다.
+- 판정은 미래 예상 가정(성장률·미래 주가배수)에 전적으로 달렸다. 맞춤형 반도체가 예상보다
+  빨리 잠식하면 "고평가"로 뒤집힐 수 있다는 우려도 균형 있게 반영해야 한다.
+
+## 결론
+### 투자의견: 매수 (Buy)
+### 판정 근거 미래 예상 가정
+- 목표 주가배수: 29.0배
+- 장기 이익 성장률: 27.5%
+이 두 값은 assumptions-bands.md의 적정 범위(18~35배, 20~44%) 안이며, 애널리스트 평균
+의견(golden-reports/03)과 같은 중심값이다.
+
+## 출처
+- data/financials.json - NVIDIA FY2026 10-K, stockanalysis.com 실시간 주가
+- raw/뉴스-NVIDIA-2026Q2전망.md / raw/애널리스트-의견-2026.md / raw/적정가-가정-2026.md
+- assumptions-bands.md - 미래 예상 가정의 적정 범위(golden-reports/ 5건 역산)
+</script>
+
+<script type="text/plain" data-path="scripts/validate_fair_value.py">
+#!/usr/bin/env python3
+"""stage5 적정가치 리포트 검증기 - 정형(결정론) 파트. Claude Code Stop hook으로 실행된다.
+reports/fair-value.md를 검사해:
+  - 필수 섹션 5개 + '## 출처' + 인라인 출처 표기 + 플레이스홀더 없음 (형식)
+  - data/financials.json(SEC 10-K)으로 정량 지표 5개를 재계산해 리포트 값과 대조
+  - '## 종합 판정'에 저평가/적정(중립)/고평가 중 하나가 있는지
+  - ★[stage5] '### 판정 근거 미래 예상 가정'의 목표 주가배수·장기 이익 성장률이
+    data/assumptions.json 적정 범위 안인지. 범위 밖이면 '적정범위 밖 근거:' 마커 필수.
+하나라도 실패하면 사유를 stderr로 내고 exit 2 → Claude가 종료를 못 하고 고치게 된다."""
+REQUIRED_SECTIONS = ["종목 개요","정량 분석","정성 분석","종합 판정","결론"]
+MIN_INLINE_CITATIONS = 5
+OUTOFBAND_MARKER = "적정범위 밖 근거:"
+
+def compute_metrics(fin):
+    c, p, mkt = fin["current"], fin["prior"], fin["시장"]
+    eps = fin["주당순이익_달러"]["FY2026"]
+    per = mkt["주가"] / eps
+    revenue_growth = (c["매출액"] - p["매출액"]) / p["매출액"] * 100
+    opm = c["영업이익"] / c["매출액"] * 100
+    ni_yoy = (c["당기순이익"] - p["당기순이익"]) / p["당기순이익"] * 100
+    return {"주당순이익":f"{eps:.2f}","주가배수":f"{per:.1f}","매출증가율":f"{revenue_growth:.1f}",
+            "영업이익률":f"{opm:.1f}","순이익증가율":f"{ni_yoy:.1f}"}
+
+def validate(path):
+    text = open(path, encoding="utf-8").read()
+    failures = []
+    # 1) 필수 섹션 / '## 출처'  2) 인라인 출처 최소 5개  3) 플레이스홀더 없음
+    # 4) 정량 지표 5개 재계산 대조 (financials.json)
+    for name, val in compute_metrics(fin).items():
+        if val not in text:
+            failures.append(f"{name} 값 불일치 - 재계산값 '{val}'이 리포트에 없음")
+    # 5) '## 종합 판정'에 판정어(저평가/적정/고평가) 존재
+    # 6) [stage5] 미래 예상 가정이 적정 범위 안인지 (assumptions.json 밴드와 대조)
+    target_pe = extract_assumption(text, "목표 주가배수")
+    growth    = extract_assumption(text, "장기 이익 성장률")
+    out_of_band = not (pe_band["min"] <= target_pe <= pe_band["max"]) \
+               or not (gr_band["min"] <= growth <= gr_band["max"])
+    if out_of_band and OUTOFBAND_MARKER not in text:
+        failures.append("미래 예상 가정이 적정 범위를 벗어났는데 '적정범위 밖 근거:' 마커가 없음")
+    return failures
+
+# main: failures 있으면 stderr 출력 + sys.exit(2) / 없으면 sys.exit(0)
+#   (정성 분석 품질·범위 밖 근거의 설득력은 fair-value-reviewer subagent가 채점)
+</script>
+
+<script type="text/plain" data-path=".claude/agents/fair-value-reviewer.md">
+---
+name: fair-value-reviewer
+description: reports/fair-value.md의 비정형 파트(정성 분석·종합 판정·범위 밖 근거)를 채점하는 리뷰어. 정형 지표·범위 준수는 hook(validate_fair_value.py)이 이미 검증하므로, 이 subagent는 hook이 판정할 수 없는 주관 영역만 본다.
+tools: Read, Grep, Glob
+---
+
+# 적정가치 리포트 리뷰어 (LLM-as-judge, 비정형 전담)
+
+너는 까다로운 리서치 심사역이다. 결정론 hook이 이미 형식·정량 지표 재계산과 "미래 예상
+가정이 범위 안인가/범위 밖이면 마커가 있는가"까지 검사했다. 너는 hook이 판정할 수 없는
+주관 영역만 채점한다.
+
+## 무엇을 채점하나 (항목당 0~4점)
+1. 정성 분석 균형 - 긍정·우려 요인이 각각 최소 2개, 각 논거에 raw/ 인라인 출처가 달렸는가?
+2. 정량↔정성 종합 일관성 - 종합 판정이 정량과 정성을 둘 다 반영하는가?
+3. 미래 예상 가정의 명시성 - 결론이 판정을 좌우한 가정을 구체적으로 드러냈는가?
+4. [stage5] 범위 밖 근거의 설득력 - 가정이 범위 밖이면 그 근거가 golden 대비 강한가?
+   막연한 낙관("그냥 오를 것 같다")이면 감점.
+
+## 출력 형식 (반드시 이대로)
+    항목1 정성 균형: X/4 - <이유, 인용>
+    항목2 종합 일관성: X/4 - <이유, 인용>
+    항목3 미래 예상 가정 명시: X/4 - <이유, 인용>
+    항목4 범위 밖 근거 설득력: X/4 - <이유, 인용> (범위 안이면 "해당 없음 - 4/4")
+    합계: XX/16 → PASS(≥9) / FAIL
+    개선 지시:
+    - <미달 항목별 실행 가능한 지시>
+</script>
+
+<script type="text/plain" data-path=".claude/settings.json">
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python3 scripts/validate_fair_value.py" }
+        ]
+      }
+    ]
+  }
+}
+</script>
+
+<script>
+/* ============================ 데이터 모델 ============================ */
+const ACTOR_ICON = { human:'👤', ai:'🤖' };
+
+const CAT = {
+  prep:        { c:'#d4a017', bg:'#fbf1cf', name:'① 형식지화 이해(golden)' },
+  band:        { c:'#7c3aed', bg:'#ebe1fb', name:'★ 적정범위(형식지)' },
+  input:       { c:'#e8862a', bg:'#ffe6cf', name:'커맨드 입력' },
+  structured:  { c:'#2f9e44', bg:'#d6f1de', name:'정형(재무→지표)' },
+  unstructured:{ c:'#3b6fe0', bg:'#dbe6ff', name:'비정형(리포트·뉴스)' },
+  output:      { c:'#64748b', bg:'#e6ebf1', name:'리포트 작성' },
+  formal:      { c:'#0e9488', bg:'#cdeeea', name:'정형 오라클(hook)' },
+  informal:    { c:'#9b59b6', bg:'#eeddf7', name:'비정형 오라클(subagent)' },
+  merge:       { c:'#475569', bg:'#dde3ec', name:'두 겹 합류' },
+  end:         { c:'#15803d', bg:'#d3f3dd', name:'완료' },
+};
+
+const NODES = [
+  { id:'G', label:'golden 5건 읽기\n(가정 관측)', category:'prep', col:0, row:0, actor:'human',
+    files:[{path:'golden-reports/03-애널리스트-평균.md',action:'read'}],
+    desc:'애널리스트·계산모델 5건이 실제로 쓴 미래 예상 가정(목표 주가배수·성장률)을 관측한다.',
+    why:'“정상 범위”가 어디서 왔는지 근거를 눈으로 확인하는 단계 - 없으면 범위가 하늘에서 뚝 떨어진 숫자가 된다.' },
+  { id:'B', label:'적정범위 확인\n(암묵지→형식지)', category:'band', col:1, row:0, actor:'human',
+    files:[{path:'assumptions-bands.md',action:'read'},{path:'data/assumptions.json',action:'read'}],
+    desc:'golden 5건에서 역산한 적정 범위(목표 주가배수 18~35배·성장률 20~44%)를 확인한다. 이 문서가 이 stage의 페이로드.',
+    why:'stage4 지표는 “이미 있던 공식”을 옮긴 것이지만, 이 범위는 아무도 안 정해준 것을 역산해 만든 형식지 - 뒤 hook의 판정 기준이 된다.' },
+  { id:'CMD', label:'/fair-value-report\nNVIDIA 입력', category:'input', col:2, row:0, actor:'human',
+    files:[{path:'.claude/skills/fair-value-report/SKILL.md',action:'read'}],
+    desc:'사람이 슬래시커맨드를 입력해 리포트 생성 절차(SKILL 4단계)를 발동한다.',
+    why:'사람이 개입하는 시작점 - 여기서부터 AI가 정형·비정형을 읽고 종합한다.' },
+  { id:'QUANT', label:'정형 읽기\n지표 5개 재계산', category:'structured', col:3, row:0, actor:'ai',
+    files:[{path:'data/financials.json',action:'read'}],
+    desc:'financials.json(10-K)에서 주가·재무를 읽어 EPS·PER·매출/순이익 증가율·영업이익률을 계산식과 함께 계산.',
+    why:'참/거짓이 명확한 정형 신호. 이 5개 값은 뒤에서 hook이 그대로 재계산해 대조한다(결정론적 검증 대상).' },
+  { id:'QUAL', label:'비정형 읽기\n긍정/우려 요인', category:'unstructured', col:4, row:0, actor:'ai',
+    files:[{path:'raw/애널리스트-의견-2026.md',action:'read'},{path:'raw/뉴스-NVIDIA-2026Q2전망.md',action:'read'},{path:'raw/적정가-가정-2026.md',action:'read'}],
+    desc:'raw/ 3건에서 성장성·리스크·목표주가·미래 예상 가정을 뽑아 긍정/우려 요인을 균형 있게 정리.',
+    why:'주관적 판단 영역. NVIDIA의 “저평가”는 성장률이 유지된다는 예상에 의존 - 이 예상을 명시적으로 끌어내야 한다.' },
+  { id:'WRITE', label:'종합 판정 작성\n→ fair-value.md', category:'output', col:5, row:0, actor:'ai',
+    files:[{path:'reports/fair-value.md',action:'write'}],
+    desc:'정량+정성을 종합해 저평가/적정/고평가 판정 + “### 판정 근거 미래 예상 가정” 2줄을 넣어 리포트를 쓴다.',
+    why:'정형·비정형이 여기서 하나로 합쳐진다. 두 겹 오라클이 검사하는 대상 산출물.' },
+  { id:'HOOK', label:'정형 오라클(hook)\n형식·지표 재계산', category:'formal', col:6, row:-1, actor:'ai',
+    files:[{path:'scripts/validate_fair_value.py',action:'run'},{path:'.claude/settings.json',action:'read'}],
+    desc:'Stop hook이 validate_fair_value.py 실행: 섹션 5개+출처+인라인 출처, financials.json으로 지표 5개 재계산 대조, 판정어 존재를 검사.',
+    why:'결정론적 절반. 세션 종료를 가로채(exit 2) 형식·숫자가 틀리면 Claude가 못 끝내게 만든다.' },
+  { id:'BAND', label:'가정 범위\n안 / 밖?', category:'formal', col:7, row:-1, actor:'ai',
+    files:[{path:'data/assumptions.json',action:'read'},{path:'assumptions-bands.md',action:'read'}],
+    desc:'“목표 주가배수·장기 이익 성장률” 2줄을 assumptions.json 밴드(18~35배·20~44%)와 대조. 범위 밖이면 “적정범위 밖 근거:” 마커가 있어야 통과.',
+    why:'★ 형식지화한 범위가 실제 게이트로 작동하는 지점. 범위 밖인데 근거가 없으면 exit 2 → 루프백.' },
+  { id:'REVIEW', label:'비정형 오라클\nsubagent 채점', category:'informal', col:6, row:1, actor:'ai',
+    files:[{path:'.claude/agents/fair-value-reviewer.md',action:'read'}],
+    desc:'fair-value-reviewer가 정성 균형·정량↔정성 일관성·가정 명시성·범위 밖 근거 설득력을 0~4점씩(16점) 채점. PASS≥9.',
+    why:'주관적 절반. hook이 판정할 수 없는 “판단의 질”을 LLM-as-judge가 채점 - 두 겹의 나머지 한 겹.' },
+  { id:'MERGE', label:'두 겹 통과\n(hook + subagent)', category:'merge', col:8, row:0, actor:'ai',
+    files:[],
+    desc:'정형 hook 통과 AND 비정형 subagent PASS가 모두 충족될 때만 여기로 합류한다.',
+    why:'두 겹이 한 파이프라인에 공존함을 보여주는 합류점 - 한쪽이라도 실패하면 도달하지 못한다.' },
+  { id:'DONE', label:'완료\n세션 종료 허용', category:'end', col:9, row:0, actor:'ai',
+    files:[{path:'reports/fair-value.md',action:'read'}],
+    desc:'reports/fair-value.md 확정. hook가 exit 0을 내주고 세션이 정상 종료된다.',
+    why:'두 겹 오라클을 모두 통과한 리포트만 최종 산출물로 남는다.' },
+];
+
+const EDGES = [
+  { from:'G', to:'B' },
+  { from:'B', to:'CMD' },
+  { from:'CMD', to:'QUANT' },
+  { from:'QUANT', to:'QUAL' },
+  { from:'QUAL', to:'WRITE' },
+  { from:'WRITE', to:'HOOK',  label:'정형 오라클' },
+  { from:'WRITE', to:'REVIEW',label:'비정형 오라클' },
+  { from:'HOOK', to:'BAND',   label:'형식·지표 OK' },
+  { from:'HOOK', to:'WRITE',  label:'형식·지표 실패 → 재작성', kind:'loopback' },
+  { from:'BAND', to:'MERGE',  label:'범위 안 / 밖+근거' },
+  { from:'BAND', to:'WRITE',  label:'범위 밖·마커 없음 → 재작성', kind:'loopback' },
+  { from:'REVIEW', to:'MERGE',label:'PASS ≥9' },
+  { from:'REVIEW', to:'WRITE',label:'FAIL <9 → 재작성', kind:'loopback' },
+  { from:'MERGE', to:'DONE',  label:'두 겹 통과' },
+];
+
+/* 재생 경로: 실패(범위 밖·마커 없음) → 루프백 재작성 → 2차 통과 → subagent PASS → 완료 */
+const STEPS = [
+  { activeNodes:['G'],   note:'① 형식지화 이해 - golden-reports 5건이 실제로 쓴 가정을 관측',
+    ctxAdd:[{label:'golden-reports 5건 관측 가정', cat:'prep'}] },
+  { activeNodes:['B'],   note:'② 역산된 적정 범위 확인 - 18~35배 / 20~44% (아무도 안 정해준 걸 내가 역산)',
+    ctxAdd:[{label:'적정 범위 18~35배·20~44% (형식지)', cat:'band'}] },
+  { activeNodes:['CMD'], note:'③ 사람이 /fair-value-report NVIDIA 입력 - 여기서 승인해야 진행', gate:true,
+    ctxAdd:[{label:'/fair-value-report NVIDIA (커맨드)', cat:'input'}] },
+  { activeNodes:['QUANT'], note:'④ 정형: financials.json으로 지표 5개 재계산 (EPS 4.90 / PER 44.3배 …)',
+    ctxAdd:[{label:'financials.json (SEC 10-K)', cat:'structured'},{label:'정량 지표 5개 (PER 44.3배 등)', cat:'structured'}] },
+  { activeNodes:['QUAL'], note:'⑤ 비정형: raw/ 3건에서 긍정/우려 요인 추출 (목표가 $250~$500)',
+    ctxAdd:[{label:'raw/ 3건 (뉴스·애널리스트·적정가)', cat:'unstructured'},{label:'긍정/우려 요인·목표주가', cat:'unstructured'}] },
+  { activeNodes:['WRITE'], note:'⑥ 1차 초안 - 가정을 45배·50%로 씀 (범위 밖인데 “적정범위 밖 근거:” 마커 없음)',
+    ctxAdd:[{label:'리포트 초안 v1 - 가정 45배·50% (범위 밖·마커 없음)', cat:'output'}] },
+  { activeNodes:['HOOK','BAND'], note:'❌ 1차 정형 오라클(hook): BAND 검사 - 범위 밖(45배·50%)인데 근거 마커 없음 → exit 2, 종료 차단', via:['WRITE','HOOK'],
+    ctxAdd:[{label:'hook 실패: 범위 밖+마커 없음 → 종료 차단', cat:'formal'}] },
+  { activeNodes:['WRITE'], note:'🔁 루프백 - 실패 사유 반영해 재작성: 가정을 29.0배·27.5%로 (범위 안, golden03 중심값)', via:['BAND','WRITE'],
+    ctxAdd:[{label:'리포트 초안 v2 - 가정 29.0배·27.5% (범위 안)', cat:'output'}] },
+  { activeNodes:['HOOK','BAND'], note:'✅ 2차 정형 오라클(hook): 형식·지표 재계산·가정 범위 모두 통과 (exit 0)', via:['WRITE','HOOK'],
+    ctxAdd:[{label:'hook 통과: 형식·지표·범위 OK', cat:'formal'}] },
+  { activeNodes:['REVIEW'], note:'✅ 비정형 오라클(subagent): 정성 균형·종합 일관성·가정 명시성 = 12/16 → PASS(≥9)', via:['WRITE','REVIEW'],
+    ctxAdd:[{label:'subagent 채점 12/16 → PASS', cat:'informal'}] },
+  { activeNodes:['MERGE'], note:'두 겹(정형 hook + 비정형 subagent)이 모두 통과 - 파이프라인 합류', via:['REVIEW','MERGE'],
+    ctxAdd:[{label:'두 겹 오라클 통과', cat:'merge'}] },
+  { activeNodes:['DONE'], note:'완료 - reports/fair-value.md 확정, 세션 정상 종료', via:['MERGE','DONE'],
+    ctxAdd:[{label:'reports/fair-value.md 확정', cat:'end'}] },
+];
+
+const TREE = [
+  {name:'CLAUDE.md', path:'CLAUDE.md', depth:0, kind:'file'},
+  {name:'README.md', path:'README.md', depth:0, kind:'file'},
+  {name:'assumptions-bands.md ★', path:'assumptions-bands.md', depth:0, kind:'file'},
+  {name:'.claude/', depth:0, kind:'dir'},
+  {name:'agents/', depth:1, kind:'dir'},
+  {name:'fair-value-reviewer.md', path:'.claude/agents/fair-value-reviewer.md', depth:2, kind:'file'},
+  {name:'skills/', depth:1, kind:'dir'},
+  {name:'fair-value-report/SKILL.md', path:'.claude/skills/fair-value-report/SKILL.md', depth:2, kind:'file'},
+  {name:'settings.json', path:'.claude/settings.json', depth:1, kind:'file'},
+  {name:'data/', depth:0, kind:'dir'},
+  {name:'financials.json', path:'data/financials.json', depth:1, kind:'file'},
+  {name:'assumptions.json', path:'data/assumptions.json', depth:1, kind:'file'},
+  {name:'golden-reports/', depth:0, kind:'dir'},
+  {name:'03-애널리스트-평균.md', path:'golden-reports/03-애널리스트-평균.md', depth:1, kind:'file'},
+  {name:'(01·02·04·05 …)', depth:1, kind:'dir'},
+  {name:'raw/', depth:0, kind:'dir'},
+  {name:'애널리스트-의견-2026.md', path:'raw/애널리스트-의견-2026.md', depth:1, kind:'file'},
+  {name:'뉴스-NVIDIA-2026Q2전망.md', path:'raw/뉴스-NVIDIA-2026Q2전망.md', depth:1, kind:'file'},
+  {name:'적정가-가정-2026.md', path:'raw/적정가-가정-2026.md', depth:1, kind:'file'},
+  {name:'reports/', depth:0, kind:'dir'},
+  {name:'fair-value.md', path:'reports/fair-value.md', depth:1, kind:'file'},
+  {name:'scripts/', depth:0, kind:'dir'},
+  {name:'validate_fair_value.py', path:'scripts/validate_fair_value.py', depth:1, kind:'file'},
+];
+
+const KEY_INSIGHT = 'stage4의 지표 공식은 “이미 있던 것”을 hook에 옮긴 것이지만, stage5의 적정 범위(18~35배·20~44%)는 아무도 안 정해준 것을 golden 5건에서 역산해 형식지화한 것 - 그리고 그 형식지가 hook의 판정 기준으로 그대로 작동한다. 오라클이 두 겹인 이유도 여기 있다: 범위는 hook이 기본값으로 강제하고, 범위 밖 근거의 설득력은 subagent만 판정할 수 있다.';
+
+/* FILES: <script type=text/plain> 블록에서 실제 원문 로드 */
+const FILES = {};
+document.querySelectorAll('script[type="text/plain"][data-path]').forEach(s=>{
+  FILES[s.getAttribute('data-path')] = s.textContent.replace(/^\n/,'');
+});
+
+/* ============================ cytoscape ============================ */
+/* ── 사이징 3원칙 (고정 px 목표값 없음 - 텍스트 측정으로 계산) ──
+   ① 노드 안 텍스트는 반드시 다 들어간다 → 오프스크린 canvas로 라벨을 실제 측정해 노드 w/h 계산.
+   ② 엣지 라벨 폰트 = 노드 라벨 폰트 → 단 하나의 FONT_SIZE 변수로 공유.
+   ③ 노드 폭 : 그 노드를 잇는 화살표 최소 길이 = 1:1 → 컬럼 간격을 노드 폭 측정값으로 유도.
+      텍스트 있는 엣지는 라벨이 다 들어갈 만큼만 더 넓힌다. */
+const FONT_SIZE = 22;                         // 노드·엣지 라벨 공유 폰트(20~26 범위에서 이 프로젝트에 맞춰 선택)
+function measure(text, fontPx, weight){
+  const ctx = measure._ctx || (measure._ctx = document.createElement('canvas').getContext('2d'));
+  ctx.font = `${weight||700} ${fontPx}px -apple-system,"Malgun Gothic",sans-serif`;
+  return Math.max(...String(text).split('\n').map(line => ctx.measureText(line).width));
+}
+const PAD_X = 26, PAD_Y = 20, LINE_H = FONT_SIZE * 1.4;
+const DIAMOND_CATS = new Set(['formal','informal']);   // 다이아몬드로 그리는 카테고리
+/* ① 각 노드 라벨을 측정해 폭/높이를 정한다(고정값 아님). 다이아몬드는 대각선 여유계수 1.4. */
+NODES.forEach(n=>{
+  const label = (ACTOR_ICON[n.actor]||'') + ' ' + n.label;
+  const lines = label.split('\n');
+  const w = Math.max(...lines.map(l => measure(l, FONT_SIZE))) + PAD_X*2;
+  const h = lines.length*LINE_H + PAD_Y*2;
+  const k = DIAMOND_CATS.has(n.category) ? 1.4 : 1;
+  n.w = Math.round(w*k); n.h = Math.round(h*k);
+});
+
+/* ③ 컬럼 간 x간격: 인접 노드 폭 평균(=화살표 최소 길이 ≈ 노드 폭, 1:1)을 기본으로,
+      그 사이 엣지에 라벨이 있으면 라벨 폭(동일 FONT_SIZE로 측정)만큼 더 벌린다. */
+const NODE = Object.fromEntries(NODES.map(n=>[n.id,n]));
+const colWidth = {};
+NODES.forEach(n=>{ colWidth[n.col] = Math.max(colWidth[n.col]||0, n.w); });
+const maxCol = Math.max(...NODES.map(n=>n.col));
+const xOfCol = {0:0};
+for(let c=1;c<=maxCol;c++){
+  let gap = (colWidth[c-1] + colWidth[c]) / 2;                 // 1:1 기준(화살표 길이 ≈ 노드 폭)
+  EDGES.forEach(e=>{
+    const a=NODE[e.from], b=NODE[e.to];
+    if(a && b && a.col===c-1 && b.col===c && e.label){
+      gap = Math.max(gap, measure(e.label, FONT_SIZE, 700) + 48);  // 라벨이 더 넓으면 그만큼 벌림
+    }
+  });
+  xOfCol[c] = xOfCol[c-1] + colWidth[c-1]/2 + gap + colWidth[c]/2;
+}
+/* 분기축(row) y간격: 노드 높이 측정값 기준(1:1 규칙은 진행축만 대상 - 세로는 높이+여백). */
+const rowHeight = {};
+NODES.forEach(n=>{ rowHeight[n.row] = Math.max(rowHeight[n.row]||0, n.h); });
+const maxRowH = Math.max(...Object.values(rowHeight));
+const V_GAP = 56;
+const rowPitch = maxRowH + V_GAP;              // 루프백 곡률도 이 값에서 유도(고정 px 아님)
+
+const styleCat = Object.keys(CAT).map(k=>({
+  selector:`node[category="${k}"]`, style:{ 'border-color':CAT[k].c, 'background-color':CAT[k].bg }
+}));
+const elements = [
+  ...NODES.map(n=>({ data:{ id:n.id, label:(ACTOR_ICON[n.actor]||'')+' '+n.label,
+      category:n.category, actor:n.actor, w:n.w, h:n.h },
+      position:{ x:xOfCol[n.col], y:n.row*rowPitch } })),
+  ...EDGES.map((e,i)=>({ data:{ id:'e'+i, source:e.from, target:e.to, label:e.label||'', kind:e.kind||'' } })),
+];
+
+const ARROW = Math.max(1.4, FONT_SIZE/16);     // 화살촉도 FONT_SIZE에 비례(고정 배율 상수 금지)
+const cy = cytoscape({
+  container: document.getElementById('flow'),
+  elements,
+  layout:{ name:'preset' },
+  wheelSensitivity:0.2,
+  style:[
+    /* 노드 크기는 위에서 측정해 data(w)/data(h)에 넣었다 - 여기서 고정 width/height를 주지 않는다. */
+    { selector:'node', style:{
+      'label':'data(label)','text-valign':'center','text-halign':'center','text-wrap':'wrap',
+      'text-max-width':'data(w)','width':'data(w)','height':'data(h)',
+      'font-size':FONT_SIZE,'color':'#1a1d21','font-weight':700,
+      'background-color':'#fff','border-width':3,'border-color':'#c9c9c9','shape':'round-rectangle',
+      'text-outline-width':0 } },
+    ...styleCat,
+    { selector:'node[category="formal"]',  style:{ 'shape':'diamond' } },
+    { selector:'node[category="informal"]',style:{ 'shape':'diamond' } },
+    { selector:'node[category="end"]',     style:{ 'shape':'round-rectangle','border-width':4 } },
+    { selector:'node[actor="human"]', style:{ 'border-style':'dashed' } },
+    { selector:'node.dim',   style:{ 'opacity':0.28 } },
+    { selector:'edge.dim',   style:{ 'opacity':0.12 } },
+    { selector:'node.active', style:{ 'border-color':'#d97757','border-width':6,'background-color':'#fff3ee',
+      'overlay-color':'#d97757','overlay-opacity':0.18,'overlay-padding':14,'z-index':50 } },
+    { selector:'node.picked', style:{ 'border-color':'#2f6df0','border-width':6,'border-style':'double' } },
+    /* ② 엣지 라벨 font-size = FONT_SIZE(노드와 동일). 화살촉도 FONT_SIZE 비례. */
+    { selector:'edge', style:{
+      'width':3,'line-color':'#b7bcc4','target-arrow-color':'#b7bcc4','target-arrow-shape':'triangle',
+      'arrow-scale':ARROW,'curve-style':'bezier','label':'data(label)','font-size':FONT_SIZE,'color':'#3a4048',
+      'font-weight':700,'text-wrap':'wrap','text-max-width':240,
+      'text-background-color':'#fff','text-background-opacity':1,'text-background-padding':5,
+      'text-rotation':'none','z-index':30 } },
+    { selector:'edge[kind="loopback"]', style:{ 'line-style':'dashed','line-color':'#e0a07a',
+      'target-arrow-color':'#e0a07a','curve-style':'unbundled-bezier',
+      'control-point-distances':[-rowPitch*1.5],'control-point-weights':[0.5],'color':'#b5602f','z-index':32 } },
+    /* 세 루프백(HOOK→WRITE=e8, BAND→WRITE=e10, REVIEW→WRITE=e12)이 WRITE로 수렴한다.
+       곡률(control-point-distances)을 행 높이(rowPitch)에서 유도하고, 부호·가중치를 서로 달리해
+       세 라벨이 WRITE 앞에서 겹치지 않게 위/멀리위/아래로 분산한다. */
+    { selector:'edge#e8',  style:{ 'control-point-distances':[-rowPitch*1.35],'control-point-weights':[0.30] } }, // HOOK→WRITE : 위쪽 가까이
+    { selector:'edge#e10', style:{ 'control-point-distances':[-rowPitch*2.6], 'control-point-weights':[0.5]  } }, // BAND→WRITE : 위쪽 멀리(더 긴 엣지)
+    { selector:'edge#e12', style:{ 'control-point-distances':[ rowPitch*1.35],'control-point-weights':[0.30] } }, // REVIEW→WRITE: 아래쪽 가까이
+    { selector:'edge.flow', style:{ 'line-color':'#d97757','target-arrow-color':'#d97757','width':5,
+      'line-style':'dashed','line-dash-pattern':[12,7],'z-index':60,'opacity':1 } },
+  ],
+});
+
+/* ============================ 상태 & 렌더 ============================ */
+let stepIdx = 0, selectedNode = null, playing = false, awaitingGate = false, timer = null, rafId = null;
+/* viewZoom = 화면 배율의 단일 소스. init·전체보기·사용자 휠에서만 바뀌고, 스텝 전환(focusNodes)은
+   이 값을 유지한 채 팬만 한다 - 재생 중에도 사용자가 정한 배율이 초기화되지 않게. */
+let viewZoom = 1.1, animatingView = false;
+cy.on('zoom', ()=>{ if(!animatingView) viewZoom = cy.zoom(); });
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* 범례 */
+(function legend(){
+  const el = document.getElementById('legend');
+  let h = '<h4>카테고리</h4>';
+  Object.keys(CAT).forEach(k=>{
+    h += `<div class="row"><span class="dot" style="background:${CAT[k].bg};border-color:${CAT[k].c}"></span>${CAT[k].name}</div>`;
+  });
+  h += '<div class="sep"></div><h4>실행 주체</h4>';
+  h += '<div class="row">👤 사람 · 🤖 AI</div>';
+  h += '<div class="row" style="color:#5b6472">(사람=점선 테두리)</div>';
+  h += '<div class="sep"></div><h4>엣지</h4>';
+  h += '<div class="row">→ 진행</div>';
+  h += '<div class="row" style="color:#b5602f">⤴ 루프백(점선·재시도)</div>';
+  h += '<div class="row" style="color:#d97757">━ 주황 = 지금 지나간 경로</div>';
+  el.innerHTML = h;
+})();
+
+/* 트리 */
+function renderTree(activeFiles, touchedFiles){
+  const el = document.getElementById('tree');
+  el.innerHTML = TREE.map(t=>{
+    const pad = '  '.repeat(t.depth);
+    if(t.kind==='dir'){ return `<div class="tnode dir">${pad}${esc(t.name)}</div>`; }
+    const isActive = activeFiles.has(t.path);
+    const isTouched = touchedFiles.has(t.path);
+    let cls = 'tnode file'; if(isActive) cls+=' active'; else if(isTouched) cls+=' touched';
+    let badge = '';
+    if(isActive){ const a = activeFiles.get(t.path);
+      const bc = a==='write'?'b-write':a==='run'?'b-run':'b-read';
+      const bt = a==='write'?'쓰기':a==='run'?'실행':'읽기';
+      badge = `<span class="badge ${bc}">${bt}</span>`; }
+    return `<div class="tnode ${cls}" data-path="${esc(t.path)}">${pad}${esc(t.name)}${badge}</div>`;
+  }).join('');
+  el.querySelectorAll('.tnode.file').forEach(n=>{
+    n.addEventListener('click',()=>{ const p=n.getAttribute('data-path'); if(p) showFiles([{path:p,action:'read'}]); });
+  });
+}
+
+/* 뷰어 (탭 여러 파일) */
+let viewerFiles = [], viewerActive = 0;
+function showFiles(files){
+  viewerFiles = files.filter(f=>f.path); viewerActive = 0;
+  renderViewer();
+}
+function renderViewer(){
+  const tabs = document.getElementById('vtabs');
+  const vpath = document.getElementById('vpath');
+  const body = document.getElementById('viewerBody');
+  if(!viewerFiles.length){ tabs.innerHTML=''; vpath.textContent='파일을 선택하세요'; body.textContent='노드를 클릭하면 파일 원문이 표시됩니다.'; return; }
+  tabs.innerHTML = viewerFiles.map((f,i)=>{
+    const name = f.path.split('/').pop();
+    return `<button class="${i===viewerActive?'on':''}" data-i="${i}" title="${esc(f.path)}">${esc(name)}</button>`;
+  }).join('');
+  tabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ viewerActive=+b.getAttribute('data-i'); renderViewer(); }));
+  const f = viewerFiles[viewerActive];
+  vpath.textContent = f.path + (f.action?`  ·  ${f.action==='write'?'쓰기':f.action==='run'?'실행':'읽기'}`:'');
+  body.textContent = FILES[f.path] || '(원문 미임베드)';
+}
+
+/* context 누적 */
+function renderCtx(){
+  const el = document.getElementById('ctxList');
+  let items = [];
+  for(let i=0;i<=stepIdx;i++){ (STEPS[i].ctxAdd||[]).forEach(c=>items.push({...c, step:i})); }
+  el.innerHTML = items.map((c,idx)=>{
+    const cc = CAT[c.cat]||{c:'#888',bg:'#eee',name:c.cat};
+    const recent = idx===items.length-1;
+    return `<div class="ctxItem ${recent?'recent':''}" style="border-left-color:${cc.c};background:${cc.bg}">
+      <span class="k" style="color:${cc.c}">${esc(cc.name)}</span>${esc(c.label)}</div>`;
+  }).join('');
+  document.getElementById('ctxCount').textContent = `지금까지 ${items.length}개 항목이 컨텍스트에 쌓임`;
+  el.scrollTop = el.scrollHeight;
+}
+
+/* 상세 밴드 */
+function renderDetail(){
+  const el = document.getElementById('detail');
+  const step = STEPS[stepIdx];
+  let node = null;
+  if(selectedNode) node = NODES.find(n=>n.id===selectedNode);
+  else if(step.activeNodes.length===1) node = NODES.find(n=>n.id===step.activeNodes[0]);
+  if(node){
+    el.className='';
+    const pill = `<span class="pill ${node.actor}">${ACTOR_ICON[node.actor]} ${node.actor==='human'?'사람':'AI'}</span>`;
+    el.innerHTML = `<div class="note" style="color:#b5602f">${esc(step.note||'')}</div>
+      <div class="title">${esc(node.label.replace(/\n/g,' '))}${pill}</div>
+      <div class="desc">${esc(node.desc)}</div>
+      <div class="why">💡 ${esc(node.why)}</div>`;
+  } else {
+    // 병렬(활성 여럿) or 선택없음: note + KEY_INSIGHT
+    el.className='keyinsight';
+    el.innerHTML = `<div class="note" style="color:#b5602f">${esc(step.note||'')}</div>
+      <div class="kihead">핵심 통찰 (KEY INSIGHT)</div>
+      <div class="desc">${esc(KEY_INSIGHT)}</div>`;
+  }
+}
+
+/* 엣지 흐름 애니메이션 */
+function animateEdge(fromId,toId){
+  cy.edges('.flow').removeClass('flow'); if(rafId) cancelAnimationFrame(rafId);
+  let e = cy.edges(`[source="${fromId}"][target="${toId}"]`);
+  if(!e.length) e = cy.edges(`[source="${toId}"][target="${fromId}"]`);
+  if(!e.length) return;
+  e.addClass('flow');
+  let off = 0;
+  const tick=()=>{ off=(off-2)%160; e.style('line-dash-offset',off); rafId=requestAnimationFrame(tick); };
+  tick();
+}
+
+/* 포커스: 활성 노드 살짝 왼쪽 센터링 */
+function focusNodes(ids){
+  const eles = cy.collection(ids.map(id=>cy.$('#'+id)));
+  if(!eles.length) return;
+  animatingView = true;
+  cy.resize();                               // 컨테이너 크기를 매번 최신화(플렉스 레이아웃 지연 시 센터링 오차 방지)
+  cy.zoom(viewZoom);                         // 배율을 즉시 확정(줌 애니메이션 레이스 방지) - 사용자 배율 유지
+  const bb = eles.boundingBox();             // 모델 좌표(줌 무관)
+  const mx = (bb.x1+bb.x2)/2, my=(bb.y1+bb.y2)/2;
+  const w = cy.width(), h = cy.height();
+  const OFFSET = Math.min(150, w*0.16);
+  cy.animate({ pan:{ x: w/2 - OFFSET - mx*viewZoom, y: h/2 - my*viewZoom } },
+             { duration:380, complete:()=>{ animatingView=false; } });  // 팬만 애니메이션
+}
+
+/* goTo */
+function goTo(i, fromClick){
+  const prev = STEPS[stepIdx];
+  i = Math.max(0, Math.min(STEPS.length-1, i));
+  const step = STEPS[i];
+  // 엣지 애니메이션
+  if(i!==stepIdx || fromClick){
+    let via = step.via;
+    if(!via){
+      const from = prev.activeNodes[prev.activeNodes.length-1];
+      const to = step.activeNodes[0];
+      via = [from,to];
+    }
+    if(via) animateEdge(via[0],via[1]);
+  }
+  stepIdx = i;
+  selectedNode = null;
+  // 활성/딤
+  cy.nodes().removeClass('active picked dim'); cy.edges().removeClass('dim');
+  const act = step.activeNodes;
+  cy.nodes().forEach(n=>{ if(!act.includes(n.id())) n.addClass('dim'); });
+  cy.edges().forEach(e=>{ if(e.hasClass('flow')) return; e.addClass('dim'); });
+  act.forEach(id=>cy.$('#'+id).addClass('active').removeClass('dim'));
+  focusNodes(act);
+  // 좌/우
+  renderCtx();
+  // 트리 하이라이트 + 뷰어 자동 로드
+  const activeFiles = new Map(), touched = new Set();
+  for(let k=0;k<=i;k++){ STEPS[k].activeNodes.forEach(id=>{ const nn=NODES.find(x=>x.id===id);
+    (nn.files||[]).forEach(f=>touched.add(f.path)); }); }
+  const curFiles=[];
+  act.forEach(id=>{ const nn=NODES.find(x=>x.id===id); (nn.files||[]).forEach(f=>{ activeFiles.set(f.path,f.action); curFiles.push(f); }); });
+  renderTree(activeFiles, touched);
+  if(curFiles.length) showFiles(curFiles);
+  renderDetail();
+  // gate
+  awaitingGate = !!step.gate;
+  updateControls();
+}
+
+function updateControls(){
+  document.getElementById('stepInd').textContent = (stepIdx+1)+' / '+STEPS.length;
+  document.getElementById('playBtn').textContent = playing ? '⏸' : '▶';
+  const gb = document.getElementById('gateBtn');
+  gb.style.display = awaitingGate ? 'flex' : 'none';
+}
+
+/* 재생 */
+function play(){ playing=true; updateControls();
+  if(timer) clearInterval(timer);
+  timer=setInterval(()=>{
+    if(awaitingGate) return;               // 게이트: 타이머는 살려두고 넘김
+    if(stepIdx>=STEPS.length-1){ pause(); return; }
+    goTo(stepIdx+1);
+  },1500);
+}
+function pause(){ playing=false; if(timer){clearInterval(timer);timer=null;} updateControls(); }
+
+/* 컨트롤 배선 */
+document.getElementById('playBtn').addEventListener('click',()=>{ playing?pause():(stepIdx>=STEPS.length-1?(goTo(0),play()):play()); });
+document.getElementById('forwardBtn').addEventListener('click',()=>{ if(awaitingGate){awaitingGate=false;updateControls();} goTo(stepIdx+1); });
+document.getElementById('rewindBtn').addEventListener('click',()=>{ goTo(stepIdx-1); });
+document.getElementById('fitBtn').addEventListener('click',()=>{
+  animatingView=true; cy.resize(); cy.fit(cy.elements(),60);
+  viewZoom = cy.zoom(); animatingView=false;
+});
+document.getElementById('gateBtn').addEventListener('click',()=>{ awaitingGate=false; updateControls(); if(playing){/*타이머가 이어감*/}else{ goTo(stepIdx+1); } });
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){ if(awaitingGate){awaitingGate=false;updateControls();} goTo(stepIdx+1); }
+  else if(e.key==='ArrowLeft'){ goTo(stepIdx-1); }
+});
+
+/* 노드 클릭 → 그 시점으로 점프 (경로에 있으면) + 원문 */
+function firstStepContaining(id){ for(let i=0;i<STEPS.length;i++){ if(STEPS[i].activeNodes.includes(id)) return i; } return -1; }
+cy.on('tap','node',evt=>{
+  const id = evt.target.id();
+  const node = NODES.find(n=>n.id===id);
+  const si = firstStepContaining(id);
+  if(si>=0){ goTo(si); }
+  else {
+    // 경로 밖: 상세/원문만
+    cy.nodes().removeClass('picked'); evt.target.addClass('picked');
+    selectedNode = id; renderDetail();
+    if(node.files&&node.files.length) showFiles(node.files);
+  }
+  // 항상 그 노드 파일을 뷰어에
+  if(node.files&&node.files.length) showFiles(node.files);
+});
+cy.on('tap','edge',evt=>{ const t=evt.target.target().id(); const si=firstStepContaining(t); if(si>=0) goTo(si); });
+
+/* 초기화 - 초기 줌은 전체 fit 대비 약 2배 확대해서 시작(텍스트가 크게 보이게) */
+cy.ready(()=>{ cy.resize(); cy.fit(cy.elements(),60);
+  viewZoom = Math.max(cy.zoom()*2, 1.05);
+  animatingView=true; cy.zoom(viewZoom); animatingView=false;
+  goTo(0); });
+window.addEventListener('resize',()=>{ cy.resize(); focusNodes(STEPS[stepIdx].activeNodes); });
+</script>
+</body>
+</html>

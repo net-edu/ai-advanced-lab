@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>모델별 실습 비용 누적(stage 합산) - 누적 막대 그래프</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--page-plane);
+    }
+
+    .viz-root {
+      --surface-1: #fcfcfb;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --grid: #e1e0d9;
+      --baseline: #c3c2b7;
+      --page-plane: #f9f9f7;
+      --border: rgba(11, 11, 11, 0.10);
+      --stage-1: #2a78d6;
+      --stage-2: #eb6834;
+      --stage-3: #1baf7a;
+      --stage-4: #eda100;
+      --stage-5: #e87ba4;
+      --stage-6: #008300;
+      --stage-8: #e34948;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .viz-root {
+        --surface-1: #1a1a19;
+        --text-primary: #ffffff;
+        --text-secondary: #c3c2b7;
+        --text-muted: #898781;
+        --grid: #2c2c2a;
+        --baseline: #383835;
+        --page-plane: #0d0d0d;
+        --border: rgba(255, 255, 255, 0.10);
+        --stage-1: #3987e5;
+        --stage-2: #d95926;
+        --stage-3: #199e70;
+        --stage-4: #c98500;
+        --stage-5: #d55181;
+        --stage-6: #008300;
+        --stage-8: #e66767;
+      }
+    }
+
+    .chart-card {
+      max-width: 760px;
+      margin: 24px auto;
+      padding: 24px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    figcaption h1 {
+      font-size: 20px;
+      margin: 0 0 4px;
+      color: var(--text-primary);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 16px;
+    }
+
+    .legend {
+      list-style: none;
+      display: flex;
+      gap: 16px;
+      padding: 0;
+      margin: 0 0 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .chart-wrap {
+      position: relative;
+    }
+
+    svg#chart {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .grid {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+
+    .baseline {
+      stroke: var(--baseline);
+      stroke-width: 1.5;
+    }
+
+    .tick {
+      font-size: 13px;
+      fill: var(--text-muted);
+    }
+
+    .cat-label {
+      font-size: 14px;
+      fill: var(--text-secondary);
+    }
+
+    .total-label {
+      font-size: 14px;
+      font-weight: 700;
+      fill: var(--text-primary);
+    }
+
+    .seg {
+      transition: filter 0.1s ease;
+    }
+
+    .seg-hit {
+      cursor: pointer;
+      outline: none;
+    }
+
+    .seg-hit:hover .seg,
+    .seg-hit:focus-visible .seg {
+      filter: brightness(1.12);
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: var(--text-primary);
+      color: var(--surface-1);
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transform: translate(-50%, -100%);
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .tooltip strong {
+      font-size: 14px;
+    }
+
+    .tooltip .key {
+      display: inline-block;
+      width: 10px;
+      height: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .table-toggle {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    table {
+      margin-top: 12px;
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    table th,
+    table td {
+      text-align: right;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--grid);
+      color: var(--text-secondary);
+    }
+
+    table th[scope="row"] {
+      text-align: left;
+      color: var(--text-primary);
+    }
+
+    table thead th {
+      color: var(--text-primary);
+    }
+
+    table tr:last-child th,
+    table tr:last-child td {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    caption {
+      caption-side: top;
+      text-align: left;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="viz-root">
+    <figure class="chart-card">
+      <figcaption>
+        <h1>모델별 실습 비용 누적(stage 합산)</h1>
+        <p class="subtitle">막대 구간에 마우스를 올리거나 Tab으로 이동하면 단계별 값을 볼 수 있습니다. stage7은 세 모델 모두 데이터가 없어 제외했습니다.</p>
+      </figcaption>
+      <ul class="legend">
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-1)'></span>stage1</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-2)'></span>stage2</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-3)'></span>stage3</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-4)'></span>stage4</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-5)'></span>stage5</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-6)'></span>stage6</li>
+        <li class='legend-item'><span class='swatch' style='background:var(--stage-8)'></span>stage8</li>
+      </ul>
+      <div class="chart-wrap">
+        <svg id='chart' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 480' role='img'
+          aria-label='모델별 실습 비용 누적(stage 합산) 막대그래프' preserveAspectRatio='xMidYMid meet'>
+          <line x1='60' y1='430.0' x2='700' y2='430.0' class='grid' /><text x='50' y='434.0' text-anchor='end'
+            class='tick'>$0</text>
+          <line x1='60' y1='330.0' x2='700' y2='330.0' class='grid' /><text x='50' y='334.0' text-anchor='end'
+            class='tick'>$3</text>
+          <line x1='60' y1='230.0' x2='700' y2='230.0' class='grid' /><text x='50' y='234.0' text-anchor='end'
+            class='tick'>$6</text>
+          <line x1='60' y1='130.0' x2='700' y2='130.0' class='grid' /><text x='50' y='134.0' text-anchor='end'
+            class='tick'>$9</text>
+          <line x1='60' y1='30.0' x2='700' y2='30.0' class='grid' /><text x='50' y='34.0' text-anchor='end'
+            class='tick'>$12</text>
+          <line x1='60' y1='430.0' x2='700' y2='430.0' class='baseline' />
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage1' data-value='0.10'
+            data-color='var(--stage-1)'>
+            <rect x='132.7' y='427.7' width='68' height='2.3' fill='transparent' />
+            <rect class='seg' x='134.7' y='427.7' width='64.0' height='2.3' fill='var(--stage-1)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage2' data-value='0.20'
+            data-color='var(--stage-2)'>
+            <rect x='132.7' y='421.0' width='68' height='4.7' fill='transparent' />
+            <rect class='seg' x='134.7' y='421.0' width='64.0' height='4.7' fill='var(--stage-2)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage3' data-value='0.13'
+            data-color='var(--stage-3)'>
+            <rect x='132.7' y='416.7' width='68' height='2.3' fill='transparent' />
+            <rect class='seg' x='134.7' y='416.7' width='64.0' height='2.3' fill='var(--stage-3)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage4' data-value='0.54'
+            data-color='var(--stage-4)'>
+            <rect x='132.7' y='398.7' width='68' height='16.0' fill='transparent' />
+            <rect class='seg' x='134.7' y='398.7' width='64.0' height='16.0' fill='var(--stage-4)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage5' data-value='0.28'
+            data-color='var(--stage-5)'>
+            <rect x='132.7' y='389.3' width='68' height='7.3' fill='transparent' />
+            <rect class='seg' x='134.7' y='389.3' width='64.0' height='7.3' fill='var(--stage-5)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage6' data-value='0.57'
+            data-color='var(--stage-6)'>
+            <rect x='132.7' y='370.3' width='68' height='17.0' fill='transparent' />
+            <rect class='seg' x='134.7' y='370.3' width='64.0' height='17.0' fill='var(--stage-6)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Haiku 4.5' data-stage='stage8' data-value='0.18'
+            data-color='var(--stage-8)'>
+            <rect x='132.7' y='363.3' width='68' height='5.0' fill='transparent' />
+            <path class='seg'
+              d='M134.7,368.3 L134.7,367.3 Q134.7,363.3 138.7,363.3 L194.7,363.3 Q198.7,363.3 198.7,367.3 L198.7,368.3 Z'
+              fill='var(--stage-8)' />
+          </g><text x='166.7' y='353.3' text-anchor='middle' class='total-label'>$2.00</text><text x='166.7' y='454.0'
+            text-anchor='middle' class='cat-label'>Haiku 4.5</text>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage1' data-value='0.32'
+            data-color='var(--stage-1)'>
+            <rect x='346.0' y='420.3' width='68' height='9.7' fill='transparent' />
+            <rect class='seg' x='348.0' y='420.3' width='64.0' height='9.7' fill='var(--stage-1)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage2' data-value='0.33'
+            data-color='var(--stage-2)'>
+            <rect x='346.0' y='409.3' width='68' height='9.0' fill='transparent' />
+            <rect class='seg' x='348.0' y='409.3' width='64.0' height='9.0' fill='var(--stage-2)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage3' data-value='0.31'
+            data-color='var(--stage-3)'>
+            <rect x='346.0' y='399.0' width='68' height='8.3' fill='transparent' />
+            <rect class='seg' x='348.0' y='399.0' width='64.0' height='8.3' fill='var(--stage-3)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage4' data-value='0.93'
+            data-color='var(--stage-4)'>
+            <rect x='346.0' y='368.0' width='68' height='29.0' fill='transparent' />
+            <rect class='seg' x='348.0' y='368.0' width='64.0' height='29.0' fill='var(--stage-4)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage5' data-value='0.89'
+            data-color='var(--stage-5)'>
+            <rect x='346.0' y='338.3' width='68' height='27.7' fill='transparent' />
+            <rect class='seg' x='348.0' y='338.3' width='64.0' height='27.7' fill='var(--stage-5)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage6' data-value='1.38'
+            data-color='var(--stage-6)'>
+            <rect x='346.0' y='292.3' width='68' height='44.0' fill='transparent' />
+            <rect class='seg' x='348.0' y='292.3' width='64.0' height='44.0' fill='var(--stage-6)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Sonnet 5' data-stage='stage8' data-value='0.40'
+            data-color='var(--stage-8)'>
+            <rect x='346.0' y='278.0' width='68' height='12.3' fill='transparent' />
+            <path class='seg'
+              d='M348.0,290.3 L348.0,282.0 Q348.0,278.0 352.0,278.0 L408.0,278.0 Q412.0,278.0 412.0,282.0 L412.0,290.3 Z'
+              fill='var(--stage-8)' />
+          </g><text x='380.0' y='268.0' text-anchor='middle' class='total-label'>$4.56</text><text x='380.0' y='454.0'
+            text-anchor='middle' class='cat-label'>Sonnet 5</text>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage1' data-value='1.02'
+            data-color='var(--stage-1)'>
+            <rect x='559.3' y='397.0' width='68' height='33.0' fill='transparent' />
+            <rect class='seg' x='561.3' y='397.0' width='64.0' height='33.0' fill='var(--stage-1)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage2' data-value='1.20'
+            data-color='var(--stage-2)'>
+            <rect x='559.3' y='357.0' width='68' height='38.0' fill='transparent' />
+            <rect class='seg' x='561.3' y='357.0' width='64.0' height='38.0' fill='var(--stage-2)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage3' data-value='0.96'
+            data-color='var(--stage-3)'>
+            <rect x='559.3' y='325.0' width='68' height='30.0' fill='transparent' />
+            <rect class='seg' x='561.3' y='325.0' width='64.0' height='30.0' fill='var(--stage-3)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage4' data-value='2.49'
+            data-color='var(--stage-4)'>
+            <rect x='559.3' y='242.0' width='68' height='81.0' fill='transparent' />
+            <rect class='seg' x='561.3' y='242.0' width='64.0' height='81.0' fill='var(--stage-4)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage5' data-value='1.56'
+            data-color='var(--stage-5)'>
+            <rect x='559.3' y='190.0' width='68' height='50.0' fill='transparent' />
+            <rect class='seg' x='561.3' y='190.0' width='64.0' height='50.0' fill='var(--stage-5)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage6' data-value='2.93'
+            data-color='var(--stage-6)'>
+            <rect x='559.3' y='92.3' width='68' height='95.7' fill='transparent' />
+            <rect class='seg' x='561.3' y='92.3' width='64.0' height='95.7' fill='var(--stage-6)' />
+          </g>
+          <g class='seg-hit' tabindex='0' role='button' data-model='Opus 5' data-stage='stage8' data-value='1.10'
+            data-color='var(--stage-8)'>
+            <rect x='559.3' y='54.7' width='68' height='35.7' fill='transparent' />
+            <path class='seg'
+              d='M561.3,90.3 L561.3,58.7 Q561.3,54.7 565.3,54.7 L621.3,54.7 Q625.3,54.7 625.3,58.7 L625.3,90.3 Z'
+              fill='var(--stage-8)' />
+          </g><text x='593.3' y='44.7' text-anchor='middle' class='total-label'>$11.26</text><text x='593.3' y='454.0'
+            text-anchor='middle' class='cat-label'>Opus 5</text>
+        </svg>
+        <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+      </div>
+      <button id="toggle-table" class="table-toggle" aria-expanded="false" aria-controls="data-table">표로 보기</button>
+      <table id="data-table" hidden>
+        <caption>모델별 단계별 실습 비용(표, stage7 제외)</caption>
+        <thead>
+          <tr>
+            <th scope="col">stage</th>
+            <th scope="col">Haiku 4.5</th>
+            <th scope="col">Sonnet 5</th>
+            <th scope="col">Opus 5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope='row'>stage1</th>
+            <td>$0.10</td>
+            <td>$0.32</td>
+            <td>$1.02</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage2</th>
+            <td>$0.20</td>
+            <td>$0.33</td>
+            <td>$1.20</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage3</th>
+            <td>$0.13</td>
+            <td>$0.31</td>
+            <td>$0.96</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage4</th>
+            <td>$0.54</td>
+            <td>$0.93</td>
+            <td>$2.49</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage5</th>
+            <td>$0.28</td>
+            <td>$0.89</td>
+            <td>$1.56</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage6</th>
+            <td>$0.57</td>
+            <td>$1.38</td>
+            <td>$2.93</td>
+          </tr>
+          <tr>
+            <th scope='row'>stage8</th>
+            <td>$0.18</td>
+            <td>$0.40</td>
+            <td>$1.10</td>
+          </tr>
+          <tr>
+            <th scope='row'>합계</th>
+            <td>$2.00</td>
+            <td>$4.56</td>
+            <td>$11.26</td>
+          </tr>
+        </tbody>
+      </table>
+    </figure>
+  </div>
+  <script>
+    (function () {
+      var tooltip = document.getElementById('tooltip');
+      var wrap = document.querySelector('.chart-wrap');
+      var segs = document.querySelectorAll('.seg-hit');
+
+      function showTooltip(el) {
+        var model = el.getAttribute('data-model');
+        var stage = el.getAttribute('data-stage');
+        var value = el.getAttribute('data-value');
+        var color = el.getAttribute('data-color');
+        tooltip.innerHTML = '';
+        var key = document.createElement('span');
+        key.className = 'key';
+        key.style.background = color;
+        var strong = document.createElement('strong');
+        strong.textContent = '$' + value;
+        var sep = document.createTextNode(' - ');
+        var label = document.createElement('span');
+        label.textContent = model + ' / ' + stage;
+        tooltip.appendChild(key);
+        tooltip.appendChild(strong);
+        tooltip.appendChild(sep);
+        tooltip.appendChild(label);
+        tooltip.hidden = false;
+
+        var rect = el.querySelector('.seg').getBoundingClientRect();
+        var wrapRect = wrap.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width / 2 - wrapRect.left) + 'px';
+        tooltip.style.top = (rect.top - wrapRect.top - 8) + 'px';
+      }
+
+      function hideTooltip() {
+        tooltip.hidden = true;
+      }
+
+      segs.forEach(function (el) {
+        el.addEventListener('pointerenter', function () { showTooltip(el); });
+        el.addEventListener('pointermove', function () { showTooltip(el); });
+        el.addEventListener('pointerleave', hideTooltip);
+        el.addEventListener('focus', function () { showTooltip(el); });
+        el.addEventListener('blur', hideTooltip);
+      });
+
+      var toggleBtn = document.getElementById('toggle-table');
+      var table = document.getElementById('data-table');
+      toggleBtn.addEventListener('click', function () {
+        var isHidden = table.hidden;
+        table.hidden = !isHidden;
+        toggleBtn.setAttribute('aria-expanded', String(isHidden));
+        toggleBtn.textContent = isHidden ? '표 숨기기' : '표로 보기';
+      });
+    })();
+  </script>
+</body>
+
+</html>

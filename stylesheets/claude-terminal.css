@@ -1,0 +1,294 @@
+/*
+ * AI Build LAB - Claude Code 세션 로그를 실제 앱 창처럼 보여주는 위젯
+ *
+ * <details class="ailab-terminal"> 로 감싸고 그 안에 .ailab-term-window
+ * (가짜 OS 창: 타이틀바 + 터미널 본문)을 넣으면, Ubuntu 24.04 기본 테마
+ * (Yaru, 짙은 자주색 배경 #300A24 · Ubuntu 오렌지 강조색) 톤으로 렌더링된다.
+ * <summary> 는 그 위에 얹는 별도의 접기/펼치기 라벨이다(네이티브 details, JS 불필요).
+ *
+ * Material 은 기본적으로 모든 <details>/<summary> 에 admonition 스타일
+ * (파란 배경 · note 아이콘 · 자체 화살표)을 입힌다. 아래 규칙은 그 기본값을
+ * 명시적으로 무력화한 뒤 이 위젯만의 모양을 새로 입힌다.
+ */
+
+.md-typeset details.ailab-terminal {
+  --t-bg: #300a24;
+  --t-titlebar: #2d2d2d;
+  --t-accent: #e95420;
+  --t-user: #8ae234;
+  --t-white: #ffffff;
+  --t-dim: #b3aba9;
+  --t-status: #8c8482;
+  --t-error: #ef2929;
+  --t-body: #eeeeec;
+
+  margin: 1.5rem 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* --- summary: Material 기본값 무력화 후 재설계 --- */
+
+/*
+ * summary 를 "시뮬레이터 보기"(.md-button--primary) 버튼과 같은 톤으로 채운다 -
+ * 테마 기본색(indigo) 배경 · 흰 글자 · 그림자. 접기/펼치기라는 걸 알 수 있게
+ * 왼쪽에 터미널 프롬프트(❯) 글리프를, 오른쪽에 방향 화살표를 둔다.
+ */
+.md-typeset details.ailab-terminal > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.5rem 1.1rem;
+  position: static;
+  list-style: none;
+  cursor: pointer;
+  background: var(--md-primary-fg-color);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.md-typeset details.ailab-terminal > summary:hover {
+  background: var(--md-primary-fg-color--dark, var(--md-accent-fg-color));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+}
+
+.md-typeset details.ailab-terminal > summary::-webkit-details-marker {
+  display: none;
+}
+
+.md-typeset details.ailab-terminal > summary::marker {
+  content: "";
+  display: none;
+}
+
+/* Material 의 기본 note 아이콘(::before)을 초기화하고, 대신 터미널 프롬프트
+   글리프(❯)를 넣어 "실행 로그" 버튼임을 한눈에 드러낸다 */
+.md-typeset details.ailab-terminal > summary::before {
+  position: static;
+  width: auto;
+  height: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  background: transparent;
+  content: "❯";
+  display: inline-block;
+  color: #fff;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+/* Material 의 기본 화살표(::after, 절대 위치 mask-icon)를 초기화하고
+   이 위젯만의 화살표로 다시 그린다 */
+.md-typeset details.ailab-terminal > summary::after {
+  position: static;
+  width: auto;
+  height: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  background-color: transparent;
+  content: "▸";
+  margin-left: 0.1rem;
+  color: #fff;
+  transition: transform 0.15s ease;
+}
+
+.md-typeset details.ailab-terminal[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.md-typeset details.ailab-terminal[open] > summary {
+  margin-bottom: 0.7rem;
+}
+
+/* --- 가짜 OS 창 --- */
+
+.ailab-term-window {
+  border-radius: 0.6rem;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32);
+}
+
+.ailab-term-titlebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 2.7rem;
+  padding: 0 0.9rem;
+  background: var(--t-titlebar, #2d2d2d);
+}
+
+.ailab-term-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e9e9e7;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.ailab-term-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #9a9a98;
+}
+
+.ailab-term-controls .ic {
+  position: relative;
+  display: inline-flex;
+  width: 0.9rem;
+  height: 0.9rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.ic-search::before {
+  content: "";
+  display: block;
+  width: 0.52rem;
+  height: 0.52rem;
+  border: 1.4px solid currentColor;
+  border-radius: 50%;
+}
+
+.ic-search::after {
+  content: "";
+  position: absolute;
+  width: 0.4rem;
+  height: 1.4px;
+  background: currentColor;
+  right: 0.02rem;
+  bottom: 0.06rem;
+  transform: rotate(45deg);
+  transform-origin: right center;
+}
+
+.ic-menu::before {
+  content: "";
+  display: block;
+  width: 0.85rem;
+  height: 1.4px;
+  background: currentColor;
+  box-shadow: 0 -0.26rem 0 currentColor, 0 0.26rem 0 currentColor;
+}
+
+.ic-min::before {
+  content: "";
+  display: block;
+  width: 0.7rem;
+  height: 1.4px;
+  background: currentColor;
+}
+
+.ic-max::before {
+  content: "";
+  display: block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1.4px solid currentColor;
+}
+
+.ic-close::before,
+.ic-close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.85rem;
+  height: 1.4px;
+  background: currentColor;
+}
+
+.ic-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ic-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* --- 터미널 본문 (Ubuntu 24.04 기본 GNOME Terminal 톤) --- */
+
+/*
+ * Material 이 .md-typeset code,kbd,pre 에 color:var(--md-code-fg-color)·
+ * white-space:pre-wrap 을, .md-typeset pre 에 line-height:1.4 를 강제한다
+ * (전부 (0,1,1) 특이성). 일반 클래스 선택자 하나(0,1,0)로는 못 이기므로
+ * .md-typeset 을 붙여 특이성을 올린다 - 안 그러면 흰 글자가 code 블록용
+ * 회색(--md-code-fg-color)으로 덮이고, 줄바꿈이 pre-wrap 이 되어 박스
+ * 아스키아트 정렬이 깨진다.
+ */
+.md-typeset .ailab-term-body {
+  margin: 0;
+  padding: 1.1rem 1.3rem;
+  background: var(--t-bg, #300a24);
+  color: var(--t-body, #eeeeec);
+  font-family: var(--md-code-font-family, ui-monospace, monospace);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  white-space: pre;
+  overflow: auto;
+  max-height: 34rem;
+}
+
+.ailab-term-body::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.ailab-term-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 0.3rem;
+}
+
+.ailab-term-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 사람이 입력한 프롬프트(❯ 로 시작하는 줄) - 밝은 그린으로 명확히 구별 */
+.ailab-term-body .t-user {
+  color: var(--t-user, #8ae234);
+  font-weight: 700;
+}
+
+/* Claude Code 가 답한 부분(● 마커·응답 제목) - Ubuntu 오렌지 강조색 */
+.ailab-term-body .t-accent {
+  color: var(--t-accent, #e95420);
+  font-weight: 700;
+}
+
+.ailab-term-body .t-white {
+  color: var(--t-white, #ffffff);
+  font-weight: 700;
+}
+
+.ailab-term-body .t-dim {
+  color: var(--t-dim, #b3aba9);
+}
+
+.ailab-term-body .t-status {
+  color: var(--t-status, #8c8482);
+  font-style: italic;
+}
+
+/* 도구 호출 실패·에러 결과(⎿ Error: ...) - Ubuntu Tango 팔레트의 경고 빨강 */
+.ailab-term-body .t-error {
+  color: var(--t-error, #ef2929);
+}

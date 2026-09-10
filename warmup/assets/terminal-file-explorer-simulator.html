@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>터미널과 파일 탐색기 비교 실습</title>
+  <style>
+    :root {
+      --page: #eef2f6;
+      --surface: #ffffff;
+      --surface-muted: #f6f8fa;
+      --line: #d5dce5;
+      --line-strong: #aeb8c5;
+      --text: #17202a;
+      --muted: #5c6875;
+      --accent: #087ea4;
+      --accent-soft: #e7f5fa;
+      --success: #19733e;
+      --success-soft: #e8f5ec;
+      --warning: #9a6700;
+      --error: #b42318;
+      --terminal: #101820;
+      --terminal-line: #263746;
+      --terminal-text: #e6edf3;
+      --terminal-muted: #90a4b7;
+      --terminal-accent: #70d6b4;
+      --folder: #e6a700;
+      --file: #75869a;
+      --radius: 8px;
+      --shadow: 0 8px 24px rgba(23, 32, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-width: 320px;
+      min-height: 100%;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(8, 126, 164, 0.32);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      min-height: 68px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .title-wrap {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .score {
+      min-width: 86px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .icon-button {
+      display: inline-grid;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .icon-button:hover:not(:disabled) {
+      background: var(--surface-muted);
+    }
+
+    .icon-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.38;
+    }
+
+    .mission-band {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.5fr);
+      gap: 18px;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #f9fbfc;
+    }
+
+    .mission-copy {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mission-copy h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .mission-copy p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .mission-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .mission-item {
+      display: flex;
+      min-width: 0;
+      min-height: 44px;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .mission-item.current {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .mission-item.done {
+      border-color: #9dceb0;
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .mission-mark {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-size: 12px;
+    }
+
+    .mission-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      display: grid;
+      flex: 1;
+      grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+      gap: 12px;
+      min-height: 510px;
+      padding: 16px 20px 12px;
+    }
+
+    .panel {
+      display: flex;
+      min-width: 0;
+      min-height: 480px;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-muted);
+    }
+
+    .panel-title {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 9px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .panel-title small {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .terminal-dot {
+      width: 13px;
+      height: 13px;
+      flex: 0 0 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 18px 0 0 #d6a100, 36px 0 0 #5d6976;
+      margin-right: 35px;
+    }
+
+    .terminal-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      background: var(--terminal);
+      color: var(--terminal-text);
+    }
+
+    .terminal-output {
+      flex: 1;
+      min-height: 280px;
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      color: var(--terminal-text);
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .terminal-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--terminal-line);
+      background: #0c141b;
+    }
+
+    .prompt {
+      min-width: 0;
+      max-width: 58%;
+      overflow: hidden;
+      color: var(--terminal-accent);
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 13px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .terminal-input {
+      min-width: 80px;
+      flex: 1;
+      border: 0;
+      border-bottom: 1px solid #526576;
+      border-radius: 0;
+      outline: 0;
+      background: transparent;
+      color: #ffffff;
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 15px;
+      caret-color: var(--terminal-accent);
+    }
+
+    .terminal-input:focus {
+      border-bottom-color: var(--terminal-accent);
+    }
+
+    .run-button {
+      min-width: 54px;
+      min-height: 36px;
+      border: 1px solid var(--terminal-accent);
+      border-radius: 6px;
+      background: var(--terminal-accent);
+      color: #0b2b24;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .quick-commands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 12px 12px;
+      border-top: 1px solid var(--terminal-line);
+      background: #0c141b;
+    }
+
+    .quick-command {
+      min-height: 32px;
+      padding: 5px 10px;
+      border: 1px solid #425565;
+      border-radius: 5px;
+      background: #16232e;
+      color: #d8e3eb;
+      cursor: pointer;
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 12px;
+    }
+
+    .quick-command:hover {
+      border-color: var(--terminal-accent);
+      color: #ffffff;
+    }
+
+    .sync-axis {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sync-badge {
+      display: grid;
+      width: 52px;
+      height: 52px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      background: var(--surface);
+      box-shadow: 0 4px 12px rgba(23, 32, 42, 0.09);
+      color: var(--accent);
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .explorer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .explorer-toolbar .icon-button {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+      border-color: transparent;
+      font-size: 19px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      min-width: 0;
+      flex: 1;
+      align-items: center;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--surface);
+      scrollbar-width: thin;
+    }
+
+    .crumb {
+      min-height: 34px;
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .crumb:hover {
+      background: var(--accent-soft);
+    }
+
+    .crumb-separator {
+      color: #82909e;
+      font-size: 15px;
+    }
+
+    .explorer-location {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .file-table th {
+      height: 34px;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .file-table th:nth-child(1) {
+      width: 54%;
+    }
+
+    .file-table th:nth-child(2) {
+      width: 28%;
+    }
+
+    .file-table th:nth-child(3) {
+      width: 18%;
+      text-align: right;
+    }
+
+    .file-list-wrap {
+      flex: 1;
+      min-height: 260px;
+      overflow: auto;
+      background: var(--surface);
+    }
+
+    .file-row {
+      display: table-row;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      cursor: default;
+    }
+
+    .file-row.folder-row {
+      cursor: pointer;
+    }
+
+    .file-row:hover td,
+    .file-row:focus td {
+      background: var(--accent-soft);
+    }
+
+    .file-row td {
+      height: 42px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #edf0f3;
+      overflow: hidden;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-row td:last-child {
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .folder-icon,
+    .file-icon {
+      position: relative;
+      display: inline-block;
+      width: 19px;
+      height: 15px;
+      flex: 0 0 19px;
+    }
+
+    .folder-icon {
+      margin-top: 3px;
+      border-radius: 2px;
+      background: var(--folder);
+    }
+
+    .folder-icon::before {
+      position: absolute;
+      top: -4px;
+      left: 1px;
+      width: 9px;
+      height: 5px;
+      border-radius: 2px 2px 0 0;
+      background: #f2bb26;
+      content: "";
+    }
+
+    .file-icon {
+      width: 15px;
+      height: 19px;
+      border: 2px solid var(--file);
+      border-radius: 2px;
+      background: #ffffff;
+    }
+
+    .file-icon::after {
+      position: absolute;
+      right: -2px;
+      bottom: 3px;
+      width: 9px;
+      border-top: 2px solid var(--file);
+      border-bottom: 2px solid var(--file);
+      content: "";
+    }
+
+    .empty-folder {
+      display: grid;
+      min-height: 250px;
+      place-items: center;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .comparison-band {
+      margin: 0 20px 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 4px 14px rgba(23, 32, 42, 0.06);
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr);
+      align-items: stretch;
+    }
+
+    .comparison-side {
+      min-width: 0;
+      padding: 12px 15px;
+    }
+
+    .comparison-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .comparison-value {
+      display: block;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .comparison-value code {
+      color: var(--accent);
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 14px;
+    }
+
+    .comparison-equals {
+      display: grid;
+      place-items: center;
+      border-right: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .result-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 15px;
+      border-top: 1px solid var(--line);
+      background: var(--surface-muted);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .result-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .result-line.success .result-dot {
+      background: var(--success);
+    }
+
+    .result-line.error .result-dot {
+      background: var(--error);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 980px) {
+      .mission-band {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .sync-axis {
+        min-height: 46px;
+      }
+
+      .sync-badge {
+        width: 42px;
+        height: 42px;
+        font-size: 21px;
+        transform: rotate(90deg);
+      }
+
+      .panel {
+        min-height: 430px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        align-items: flex-start;
+        padding: 12px 14px;
+      }
+
+      h1 {
+        font-size: 19px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+      }
+
+      .score {
+        display: none;
+      }
+
+      .mission-band {
+        padding: 11px 14px;
+      }
+
+      .mission-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workspace {
+        padding: 12px 10px;
+      }
+
+      .comparison-band {
+        margin: 0 10px 12px;
+      }
+
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-equals {
+        min-height: 34px;
+        border: 0;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .comparison-value {
+        white-space: normal;
+      }
+
+      .panel-title small,
+      .file-table th:nth-child(3),
+      .file-row td:last-child {
+        display: none;
+      }
+
+      .file-table th:nth-child(1) {
+        width: 65%;
+      }
+
+      .file-table th:nth-child(2) {
+        width: 35%;
+      }
+
+      .prompt {
+        max-width: 42%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="title-wrap">
+        <h1>터미널과 파일 탐색기, 같은 길을 걷기</h1>
+        <p class="subtitle">가상 Windows PC · 두 화면은 하나의 파일 시스템을 공유합니다.</p>
+      </div>
+      <div class="header-actions">
+        <span class="score" id="score">0 / 4 완료</span>
+        <button class="icon-button" id="resetButton" type="button" title="처음부터 다시 시작" aria-label="처음부터 다시 시작">↻</button>
+      </div>
+    </header>
+
+    <section class="mission-band" aria-labelledby="missionTitle">
+      <div class="mission-copy">
+        <p class="eyebrow" id="missionIndex">실습 1</p>
+        <h2 id="missionTitle">현재 내가 있는 폴더를 확인하세요.</h2>
+        <p id="missionHint">터미널에서는 <code>pwd</code>, 탐색기에서는 주소 표시줄을 봅니다.</p>
+      </div>
+      <ol class="mission-list" id="missionList" aria-label="실습 진행 상태"></ol>
+    </section>
+
+    <main class="workspace">
+      <section class="panel" aria-labelledby="terminalTitle">
+        <div class="panel-head">
+          <div class="panel-title" id="terminalTitle">
+            <span class="terminal-dot" aria-hidden="true"></span>
+            Windows Terminal
+            <small>PowerShell</small>
+          </div>
+        </div>
+        <div class="terminal-body">
+          <pre class="terminal-output" id="terminalOutput" aria-live="polite"></pre>
+          <form class="terminal-input-row" id="terminalForm">
+            <label class="sr-only" for="terminalInput">PowerShell 명령 입력</label>
+            <span class="prompt" id="prompt">PS C:\Users\student&gt;</span>
+            <input class="terminal-input" id="terminalInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="missionHint">
+            <button class="run-button" type="submit">실행</button>
+          </form>
+          <div class="quick-commands" aria-label="명령어 예시">
+            <button class="quick-command" type="button" data-command="pwd">pwd</button>
+            <button class="quick-command" type="button" data-command="dir">dir</button>
+            <button class="quick-command" type="button" data-command="ls">ls</button>
+            <button class="quick-command" type="button" data-command="cd Documents">cd Documents</button>
+            <button class="quick-command" type="button" data-command="cd ..">cd ..</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="sync-axis" aria-hidden="true">
+        <div class="sync-badge">⇄</div>
+      </div>
+
+      <section class="panel" aria-labelledby="explorerTitle">
+        <div class="panel-head">
+          <div class="panel-title" id="explorerTitle">
+            <span class="folder-icon" aria-hidden="true"></span>
+            Windows 파일 탐색기
+            <small>내 PC</small>
+          </div>
+        </div>
+        <div class="explorer-toolbar">
+          <button class="icon-button" id="upButton" type="button" title="상위 폴더로 이동" aria-label="상위 폴더로 이동">↑</button>
+          <button class="icon-button" id="homeButton" type="button" title="사용자 홈 폴더로 이동" aria-label="사용자 홈 폴더로 이동">⌂</button>
+          <nav class="breadcrumbs" id="breadcrumbs" aria-label="현재 폴더 경로"></nav>
+        </div>
+        <div class="explorer-location" id="explorerLocation">위치: C:\Users\student</div>
+        <div class="file-list-wrap">
+          <table class="file-table">
+            <thead>
+              <tr>
+                <th scope="col">이름</th>
+                <th scope="col">유형</th>
+                <th scope="col">크기</th>
+              </tr>
+            </thead>
+            <tbody id="fileList"></tbody>
+          </table>
+          <div class="empty-folder" id="emptyFolder" hidden>이 폴더는 비어 있습니다.</div>
+        </div>
+      </section>
+    </main>
+
+    <section class="comparison-band" aria-labelledby="comparisonTitle">
+      <h2 class="sr-only" id="comparisonTitle">방금 한 동작 비교</h2>
+      <div class="comparison-grid">
+        <div class="comparison-side">
+          <span class="comparison-label">터미널에서는</span>
+          <span class="comparison-value" id="terminalEquivalent"><code>pwd</code> 입력</span>
+        </div>
+        <div class="comparison-equals" aria-label="같은 동작">=</div>
+        <div class="comparison-side">
+          <span class="comparison-label">파일 탐색기에서는</span>
+          <span class="comparison-value" id="explorerEquivalent">주소 표시줄에서 현재 위치 확인</span>
+        </div>
+      </div>
+      <div class="result-line" id="resultLine" role="status" aria-live="polite">
+        <span class="result-dot" aria-hidden="true"></span>
+        <span id="resultText">현재 위치는 C:\Users\student 입니다.</span>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const fileSystem = {
+        type: "folder",
+        children: {
+          "C:": {
+            type: "folder",
+            children: {
+              Users: {
+                type: "folder",
+                children: {
+                  student: {
+                    type: "folder",
+                    children: {
+                      Desktop: {
+                        type: "folder",
+                        children: {
+                          "바로가기.txt": { type: "file", size: "1 KB" }
+                        }
+                      },
+                      Documents: {
+                        type: "folder",
+                        children: {
+                          "강의자료": {
+                            type: "folder",
+                            children: {
+                              "터미널-치트시트.pdf": { type: "file", size: "240 KB" }
+                            }
+                          },
+                          "메모.txt": { type: "file", size: "2 KB" }
+                        }
+                      },
+                      Downloads: { type: "folder", children: {} },
+                      "market-analysis": {
+                        type: "folder",
+                        children: {
+                          data: {
+                            type: "folder",
+                            children: {
+                              "sales.csv": { type: "file", size: "18 KB" }
+                            }
+                          },
+                          "sample-notes.txt": { type: "file", size: "1 KB" }
+                        }
+                      },
+                      "readme.txt": { type: "file", size: "1 KB" }
+                    }
+                  },
+                  Public: { type: "folder", children: {} }
+                }
+              },
+              Windows: {
+                type: "folder",
+                children: {
+                  System32: { type: "folder", children: {} }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      const homePath = ["C:", "Users", "student"];
+      const missions = [
+        {
+          id: "where",
+          label: "현재 위치",
+          title: "현재 내가 있는 폴더를 확인하세요.",
+          hint: "터미널에서는 pwd, 탐색기에서는 주소 표시줄을 봅니다."
+        },
+        {
+          id: "list",
+          label: "내용 보기",
+          title: "현재 폴더에 무엇이 있는지 확인하세요.",
+          hint: "PowerShell의 dir과 ls는 같은 폴더 목록을 보여줍니다."
+        },
+        {
+          id: "enter",
+          label: "폴더 이동",
+          title: "Documents 폴더 안으로 이동하세요.",
+          hint: "cd Documents를 입력하거나 탐색기에서 Documents를 여세요."
+        },
+        {
+          id: "up",
+          label: "상위 이동",
+          title: "한 단계 위 폴더로 돌아오세요.",
+          hint: "cd ..을 입력하거나 탐색기의 위쪽 화살표를 누르세요."
+        }
+      ];
+
+      const state = {
+        path: homePath.slice(),
+        completed: new Set(),
+        activeMission: 0,
+        history: [],
+        historyIndex: 0,
+        output: []
+      };
+
+      const elements = {
+        score: document.getElementById("score"),
+        resetButton: document.getElementById("resetButton"),
+        missionIndex: document.getElementById("missionIndex"),
+        missionTitle: document.getElementById("missionTitle"),
+        missionHint: document.getElementById("missionHint"),
+        missionList: document.getElementById("missionList"),
+        terminalOutput: document.getElementById("terminalOutput"),
+        terminalForm: document.getElementById("terminalForm"),
+        terminalInput: document.getElementById("terminalInput"),
+        prompt: document.getElementById("prompt"),
+        upButton: document.getElementById("upButton"),
+        homeButton: document.getElementById("homeButton"),
+        breadcrumbs: document.getElementById("breadcrumbs"),
+        explorerLocation: document.getElementById("explorerLocation"),
+        fileList: document.getElementById("fileList"),
+        emptyFolder: document.getElementById("emptyFolder"),
+        terminalEquivalent: document.getElementById("terminalEquivalent"),
+        explorerEquivalent: document.getElementById("explorerEquivalent"),
+        resultLine: document.getElementById("resultLine"),
+        resultText: document.getElementById("resultText")
+      };
+
+      function pathToString(path) {
+        if (path.length === 1) return path[0] + "\\";
+        return path[0] + "\\" + path.slice(1).join("\\");
+      }
+
+      function getNode(path) {
+        let node = fileSystem;
+        for (const part of path) {
+          if (!node.children || !node.children[part]) return null;
+          node = node.children[part];
+        }
+        return node;
+      }
+
+      function findChildName(node, requestedName) {
+        if (!node || !node.children) return null;
+        const wanted = requestedName.toLocaleLowerCase("ko-KR");
+        return Object.keys(node.children).find(function (name) {
+          return name.toLocaleLowerCase("ko-KR") === wanted;
+        }) || null;
+      }
+
+      function resolvePath(rawTarget) {
+        const cleaned = rawTarget.trim().replace(/^['"]|['"]$/g, "");
+        if (!cleaned || cleaned === "~") return homePath.slice();
+        if (cleaned === ".") return state.path.slice();
+
+        const normalized = cleaned.replace(/\//g, "\\");
+        let nextPath;
+        let parts;
+
+        if (/^[a-zA-Z]:/.test(normalized)) {
+          const drive = normalized.slice(0, 2).toUpperCase();
+          nextPath = [drive];
+          parts = normalized.slice(2).split("\\").filter(Boolean);
+        } else if (normalized.startsWith("\\")) {
+          nextPath = ["C:"];
+          parts = normalized.split("\\").filter(Boolean);
+        } else {
+          nextPath = state.path.slice();
+          parts = normalized.split("\\").filter(Boolean);
+        }
+
+        for (const part of parts) {
+          if (part === ".") continue;
+          if (part === "..") {
+            if (nextPath.length > 1) nextPath.pop();
+            continue;
+          }
+
+          const currentNode = getNode(nextPath);
+          const actualName = findChildName(currentNode, part);
+          if (!actualName || currentNode.children[actualName].type !== "folder") return null;
+          nextPath.push(actualName);
+        }
+
+        return nextPath;
+      }
+
+      function formatListing() {
+        const node = getNode(state.path);
+        const entries = Object.entries(node.children || {}).sort(function (a, b) {
+          if (a[1].type !== b[1].type) return a[1].type === "folder" ? -1 : 1;
+          return a[0].localeCompare(b[0], "ko-KR");
+        });
+
+        if (!entries.length) return "    폴더가 비어 있습니다.";
+
+        return entries.map(function (entry) {
+          const name = entry[0];
+          const item = entry[1];
+          const type = item.type === "folder" ? "<DIR>" : "     ";
+          return "    " + type.padEnd(8, " ") + name;
+        }).join("\n");
+      }
+
+      function appendOutput(text, kind) {
+        state.output.push({ text: text, kind: kind || "normal" });
+        if (state.output.length > 80) state.output.shift();
+        renderTerminal();
+      }
+
+      function setComparison(terminalText, explorerText, resultText, status) {
+        elements.terminalEquivalent.innerHTML = terminalText;
+        elements.explorerEquivalent.textContent = explorerText;
+        elements.resultText.textContent = resultText;
+        elements.resultLine.className = "result-line" + (status ? " " + status : "");
+      }
+
+      function completeMission(id) {
+        state.completed.add(id);
+        const nextIndex = missions.findIndex(function (mission) {
+          return !state.completed.has(mission.id);
+        });
+        state.activeMission = nextIndex === -1 ? missions.length - 1 : nextIndex;
+        renderMissions();
+      }
+
+      function recordLocationChange(source, oldPath, newPath, actionType, targetLabel) {
+        const oldText = pathToString(oldPath);
+        const newText = pathToString(newPath);
+
+        if (actionType === "up") {
+          completeMission("up");
+          setComparison("<code>cd ..</code> 입력", "위쪽 화살표 클릭", "한 단계 위인 " + newText + "(으)로 이동했습니다.", "success");
+        } else if (actionType === "enter") {
+          if (newPath[newPath.length - 1] === "Documents") completeMission("enter");
+          setComparison("<code>cd " + escapeHtml(targetLabel) + "</code> 입력", targetLabel + " 폴더 열기", newText + " 폴더 안으로 이동했습니다.", "success");
+        } else {
+          setComparison("<code>cd " + escapeHtml(newText) + "</code> 입력", "주소 표시줄에서 경로 선택", newText + "(으)로 이동했습니다.", "success");
+        }
+
+        if (source === "explorer") {
+          appendOutput("[파일 탐색기] " + oldText + " → " + newText, "muted");
+        }
+      }
+
+      function moveToPath(nextPath, source, actionType, targetLabel) {
+        const oldPath = state.path.slice();
+        state.path = nextPath.slice();
+        recordLocationChange(source, oldPath, state.path, actionType, targetLabel || state.path[state.path.length - 1]);
+        renderAll();
+      }
+
+      function runCommand(rawCommand) {
+        const command = rawCommand.trim();
+        if (!command) return;
+
+        state.history.push(command);
+        state.historyIndex = state.history.length;
+        appendOutput("PS " + pathToString(state.path) + "> " + command, "command");
+
+        const firstSpace = command.indexOf(" ");
+        const verb = (firstSpace === -1 ? command : command.slice(0, firstSpace)).toLowerCase();
+        const argument = firstSpace === -1 ? "" : command.slice(firstSpace + 1).trim();
+
+        if (verb === "pwd" || verb === "get-location") {
+          appendOutput("\nPath\n----\n" + pathToString(state.path));
+          completeMission("where");
+          setComparison("<code>pwd</code> 입력", "주소 표시줄에서 현재 위치 확인", "현재 위치는 " + pathToString(state.path) + " 입니다.", "success");
+        } else if (verb === "dir" || verb === "ls" || verb === "get-childitem") {
+          appendOutput("\n    Directory: " + pathToString(state.path) + "\n\n" + formatListing());
+          completeMission("list");
+          const commandName = verb === "get-childitem" ? "Get-ChildItem" : verb;
+          setComparison("<code>" + commandName + "</code> 입력", "현재 폴더의 파일 목록 보기", "두 화면에 같은 폴더 내용이 표시됩니다.", "success");
+        } else if (verb === "cd" || verb === "set-location") {
+          const nextPath = resolvePath(argument);
+          if (!nextPath) {
+            const message = "경로를 찾을 수 없습니다: " + (argument || "(빈 경로)");
+            appendOutput(message, "error");
+            setComparison("<code>" + escapeHtml(command) + "</code> 입력", "없는 폴더를 열려고 시도", message, "error");
+          } else {
+            const isUp = argument.replace(/\//g, "\\") === "..";
+            const targetLabel = nextPath[nextPath.length - 1];
+            moveToPath(nextPath, "terminal", isUp ? "up" : "enter", targetLabel);
+          }
+        } else if (verb === "cls" || verb === "clear" || verb === "clear-host") {
+          state.output = [];
+          renderTerminal();
+          setComparison("<code>cls</code> 또는 <code>clear</code> 입력", "탐색기에서는 해당 없음", "터미널 출력만 깨끗하게 지웠습니다.", "success");
+        } else if (verb === "help") {
+          appendOutput("지원 명령: pwd, dir, ls, cd <폴더>, cd .., cls, clear, help");
+          setComparison("<code>help</code> 입력", "탐색기 도구 모음 확인", "이 실습에서 사용할 수 있는 명령을 표시했습니다.");
+        } else {
+          const message = "'" + verb + "'은(는) 이 실습에서 지원하지 않는 명령입니다. help를 입력해 보세요.";
+          appendOutput(message, "error");
+          setComparison("<code>" + escapeHtml(command) + "</code> 입력", "대응하는 탐색기 동작 없음", message, "error");
+        }
+
+        elements.terminalInput.value = "";
+        elements.terminalInput.focus();
+        renderAll();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderTerminal() {
+        elements.prompt.textContent = "PS " + pathToString(state.path) + ">";
+        elements.terminalOutput.innerHTML = state.output.map(function (entry) {
+          const color = entry.kind === "error"
+            ? "#ff8d86"
+            : entry.kind === "muted"
+              ? "#90a4b7"
+              : entry.kind === "command"
+                ? "#70d6b4"
+                : "#e6edf3";
+          return '<span style="color:' + color + '">' + escapeHtml(entry.text) + "</span>";
+        }).join("\n");
+        elements.terminalOutput.scrollTop = elements.terminalOutput.scrollHeight;
+      }
+
+      function renderBreadcrumbs() {
+        elements.breadcrumbs.replaceChildren();
+        state.path.forEach(function (part, index) {
+          if (index > 0) {
+            const separator = document.createElement("span");
+            separator.className = "crumb-separator";
+            separator.textContent = ">";
+            separator.setAttribute("aria-hidden", "true");
+            elements.breadcrumbs.appendChild(separator);
+          }
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "crumb";
+          button.textContent = index === 0 ? "로컬 디스크 (C:)" : part;
+          button.addEventListener("click", function () {
+            const nextPath = state.path.slice(0, index + 1);
+            if (nextPath.length === state.path.length) {
+              completeMission("where");
+              setComparison("<code>pwd</code> 입력", "주소 표시줄에서 현재 위치 확인", "현재 위치는 " + pathToString(state.path) + " 입니다.", "success");
+              renderMissions();
+              return;
+            }
+            moveToPath(nextPath, "explorer", "jump", part);
+          });
+          elements.breadcrumbs.appendChild(button);
+        });
+
+        requestAnimationFrame(function () {
+          elements.breadcrumbs.scrollLeft = elements.breadcrumbs.scrollWidth;
+        });
+      }
+
+      function renderExplorer() {
+        const node = getNode(state.path);
+        const entries = Object.entries(node.children || {}).sort(function (a, b) {
+          if (a[1].type !== b[1].type) return a[1].type === "folder" ? -1 : 1;
+          return a[0].localeCompare(b[0], "ko-KR");
+        });
+
+        elements.fileList.replaceChildren();
+        elements.emptyFolder.hidden = entries.length > 0;
+        elements.explorerLocation.textContent = "위치: " + pathToString(state.path);
+        elements.upButton.disabled = state.path.length <= 1;
+
+        entries.forEach(function (entry) {
+          const name = entry[0];
+          const item = entry[1];
+          const row = document.createElement("tr");
+          row.className = "file-row" + (item.type === "folder" ? " folder-row" : "");
+          row.tabIndex = item.type === "folder" ? 0 : -1;
+
+          const nameCell = document.createElement("td");
+          const nameWrap = document.createElement("span");
+          nameWrap.className = "name-cell";
+          const icon = document.createElement("span");
+          icon.className = item.type === "folder" ? "folder-icon" : "file-icon";
+          icon.setAttribute("aria-hidden", "true");
+          const nameText = document.createElement("span");
+          nameText.className = "name-text";
+          nameText.textContent = name;
+          nameWrap.append(icon, nameText);
+          nameCell.appendChild(nameWrap);
+
+          const typeCell = document.createElement("td");
+          typeCell.textContent = item.type === "folder" ? "파일 폴더" : "텍스트 문서";
+          const sizeCell = document.createElement("td");
+          sizeCell.textContent = item.type === "folder" ? "" : item.size;
+
+          row.append(nameCell, typeCell, sizeCell);
+
+          if (item.type === "folder") {
+            row.setAttribute("role", "button");
+            row.setAttribute("aria-label", name + " 폴더 열기");
+            const openFolder = function () {
+              moveToPath(state.path.concat(name), "explorer", "enter", name);
+            };
+            row.addEventListener("click", openFolder);
+            row.addEventListener("keydown", function (event) {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openFolder();
+              }
+            });
+          }
+
+          elements.fileList.appendChild(row);
+        });
+
+        renderBreadcrumbs();
+      }
+
+      function renderMissions() {
+        elements.missionList.replaceChildren();
+        missions.forEach(function (mission, index) {
+          const item = document.createElement("li");
+          const isDone = state.completed.has(mission.id);
+          const isCurrent = index === state.activeMission && !isDone;
+          item.className = "mission-item" + (isDone ? " done" : isCurrent ? " current" : "");
+
+          const mark = document.createElement("span");
+          mark.className = "mission-mark";
+          mark.textContent = isDone ? "✓" : String(index + 1);
+          mark.setAttribute("aria-hidden", "true");
+
+          const label = document.createElement("span");
+          label.className = "mission-label";
+          label.textContent = mission.label;
+          item.append(mark, label);
+          elements.missionList.appendChild(item);
+        });
+
+        const active = missions[state.activeMission];
+        const allDone = state.completed.size === missions.length;
+        elements.missionIndex.textContent = allDone ? "실습 완료" : "실습 " + (state.activeMission + 1);
+        elements.missionTitle.textContent = allDone ? "터미널과 탐색기가 같은 위치를 움직인다는 점을 확인했습니다." : active.title;
+        elements.missionHint.textContent = allDone ? "초기화 버튼으로 다시 연습하거나 자유롭게 다른 폴더를 탐색해 보세요." : active.hint;
+        elements.score.textContent = state.completed.size + " / " + missions.length + " 완료";
+      }
+
+      function renderAll() {
+        renderTerminal();
+        renderExplorer();
+        renderMissions();
+      }
+
+      function resetSimulator() {
+        state.path = homePath.slice();
+        state.completed.clear();
+        state.activeMission = 0;
+        state.history = [];
+        state.historyIndex = 0;
+        state.output = [
+          { text: "Windows PowerShell 파일 탐색 실습", kind: "normal" },
+          { text: "pwd, dir, ls, cd <폴더>, cd .. 명령을 사용할 수 있습니다.", kind: "muted" }
+        ];
+        setComparison("<code>pwd</code> 입력", "주소 표시줄에서 현재 위치 확인", "현재 위치는 " + pathToString(state.path) + " 입니다.", "");
+        renderAll();
+        elements.terminalInput.focus();
+      }
+
+      elements.terminalForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        runCommand(elements.terminalInput.value);
+      });
+
+      elements.terminalInput.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowUp" && state.history.length) {
+          event.preventDefault();
+          state.historyIndex = Math.max(0, state.historyIndex - 1);
+          elements.terminalInput.value = state.history[state.historyIndex];
+        } else if (event.key === "ArrowDown" && state.history.length) {
+          event.preventDefault();
+          state.historyIndex = Math.min(state.history.length, state.historyIndex + 1);
+          elements.terminalInput.value = state.history[state.historyIndex] || "";
+        }
+      });
+
+      document.querySelectorAll("[data-command]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          runCommand(button.dataset.command);
+        });
+      });
+
+      elements.upButton.addEventListener("click", function () {
+        if (state.path.length <= 1) return;
+        moveToPath(state.path.slice(0, -1), "explorer", "up", "..");
+      });
+
+      elements.homeButton.addEventListener("click", function () {
+        moveToPath(homePath, "explorer", "jump", "student");
+      });
+
+      elements.resetButton.addEventListener("click", resetSimulator);
+
+      window.__TERMINAL_EXPLORER_SIMULATOR__ = {
+        runCommand: runCommand,
+        reset: resetSimulator,
+        getState: function () {
+          return {
+            path: pathToString(state.path),
+            completed: Array.from(state.completed),
+            output: state.output.map(function (entry) { return entry.text; })
+          };
+        }
+      };
+
+      resetSimulator();
+    })();
+  </script>
+</body>
+</html>

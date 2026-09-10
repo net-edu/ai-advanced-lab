@@ -1,0 +1,186 @@
+/*
+ * AI Build LAB - Strong navigation highlighting
+ *
+ * Goal:
+ * - Left sidebar: make the current lesson/page unmistakable.
+ * - Right sidebar: make the current section in the lesson unmistakable.
+ * - Top tabs: lightly reinforce the currently selected course/day group.
+ *
+ * The visual treatment intentionally uses an inverted foreground/background
+ * style so students can quickly see "where they are" while reading.
+ */
+
+:root {
+  --ailab-nav-current-bg: var(--md-default-fg-color);
+  --ailab-nav-current-fg: var(--md-default-bg-color);
+  --ailab-nav-current-accent: var(--md-accent-fg-color);
+  --ailab-nav-current-shadow: inset 0 0 0 2px var(--ailab-nav-current-accent);
+  --ailab-nav-current-radius: 0.55rem;
+}
+
+/* Top-level tabs: show the selected day/category more clearly. */
+.md-tabs__link--active,
+.md-tabs__link[aria-current="page"],
+.md-tabs__item--active > .md-tabs__link {
+  color: var(--ailab-nav-current-fg) !important;
+  background: var(--ailab-nav-current-bg);
+  border-radius: 999px;
+  box-shadow: inset 0 -2px 0 var(--ailab-nav-current-accent);
+}
+
+.md-tabs__link {
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+/*
+ * Left sidebar current page.
+ * The custom JS adds .ailab-nav-current to the exact current page link.
+ * Material's own active classes remain as a fallback.
+ */
+.md-sidebar--primary .md-nav__link.ailab-nav-current,
+.md-sidebar--primary .md-nav__item--active > .md-nav__link.ailab-nav-current,
+.md-sidebar--primary .md-nav__link[aria-current="page"] {
+  color: var(--ailab-nav-current-fg) !important;
+  background: var(--ailab-nav-current-bg);
+  border-radius: var(--ailab-nav-current-radius);
+  box-shadow: var(--ailab-nav-current-shadow);
+  font-weight: 800;
+}
+
+.md-sidebar--primary .md-nav__link.ailab-nav-current:hover,
+.md-sidebar--primary .md-nav__link[aria-current="page"]:hover {
+  color: var(--ailab-nav-current-fg) !important;
+  background: var(--ailab-nav-current-bg);
+}
+
+/* Keep ancestor sections visible without making them compete with the exact page. */
+.md-sidebar--primary .md-nav__item--active > .md-nav__link:not(.ailab-nav-current):not([aria-current="page"]) {
+  color: var(--md-accent-fg-color);
+  font-weight: 700;
+}
+
+/* Right sidebar current heading / section. */
+.md-sidebar--secondary .md-nav__link.ailab-toc-current,
+.md-sidebar--secondary .md-nav__link--active {
+  color: var(--ailab-nav-current-fg) !important;
+  background: var(--ailab-nav-current-bg);
+  border-radius: var(--ailab-nav-current-radius);
+  box-shadow: var(--ailab-nav-current-shadow);
+  font-weight: 800;
+}
+
+.md-sidebar--secondary .md-nav__link.ailab-toc-current:hover,
+.md-sidebar--secondary .md-nav__link--active:hover {
+  color: var(--ailab-nav-current-fg) !important;
+  background: var(--ailab-nav-current-bg);
+}
+
+/* Add a small visual rail so the eye can find the current line quickly. */
+.md-sidebar--primary .md-nav__link.ailab-nav-current::before,
+.md-sidebar--primary .md-nav__link[aria-current="page"]::before,
+.md-sidebar--secondary .md-nav__link.ailab-toc-current::before,
+.md-sidebar--secondary .md-nav__link--active::before {
+  content: "";
+  display: inline-block;
+  width: 0.28rem;
+  min-width: 0.28rem;
+  height: 1.15em;
+  margin-right: 0.45rem;
+  vertical-align: -0.18em;
+  background: var(--ailab-nav-current-accent);
+  border-radius: 999px;
+}
+
+/* Increase spacing just enough for the inverted active item to breathe. */
+.md-sidebar--primary .md-nav__link,
+.md-sidebar--secondary .md-nav__link {
+  margin-top: 0.08rem;
+  margin-bottom: 0.08rem;
+  padding: 0.28rem 0.5rem;
+}
+
+
+/*
+ * Keep active sidebar links inside their own box.
+ * Using an inset outline avoids the top edge being clipped by the sidebar
+ * scroll container while preserving the strong selected-state treatment.
+ */
+.md-sidebar--primary .md-nav__link,
+.md-sidebar--secondary .md-nav__link {
+  box-sizing: border-box;
+  position: relative;
+}
+
+.md-sidebar--primary .md-nav__link.ailab-nav-current,
+.md-sidebar--primary .md-nav__link[aria-current="page"],
+.md-sidebar--secondary .md-nav__link.ailab-toc-current,
+.md-sidebar--secondary .md-nav__link--active {
+  z-index: 3;
+  isolation: isolate;
+}
+
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary .md-nav__link.ailab-nav-current,
+  .md-sidebar--primary .md-nav__link[aria-current="page"] {
+    margin-top: 0.28rem;
+    margin-bottom: 0.18rem;
+  }
+}
+
+/* Keyboard focus should be at least as visible as mouse/scroll state. */
+.md-sidebar--primary .md-nav__link:focus-visible,
+.md-sidebar--secondary .md-nav__link:focus-visible,
+.md-tabs__link:focus-visible {
+  outline: 3px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+  border-radius: var(--ailab-nav-current-radius);
+}
+
+/*
+ * Stronger top-tab affordance for classroom projection.
+ * The selected day/category needs to be visible at a glance from a distance.
+ */
+@media screen and (min-width: 76.25em) {
+  .md-tabs {
+    min-height: 3.45rem;
+  }
+
+  .md-tabs__list {
+    min-height: 3.45rem;
+    gap: 0.28rem;
+    align-items: center;
+  }
+
+  .md-tabs__item {
+    height: auto;
+  }
+
+  .md-tabs__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.55rem;
+    margin-top: 0.28rem;
+    margin-bottom: 0.28rem;
+    padding: 0.65rem 1.05rem;
+    border-radius: 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+  }
+
+  .md-tabs__link--active,
+  .md-tabs__link[aria-current="page"],
+  .md-tabs__item--active > .md-tabs__link {
+    min-width: 7.5rem;
+    justify-content: center;
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+    color: var(--ailab-nav-current-fg) !important;
+    background: var(--ailab-nav-current-bg);
+    box-shadow:
+      0 0 0 2px var(--md-accent-fg-color),
+      0 6px 18px rgba(15, 23, 42, 0.22);
+    transform: translateY(-1px);
+  }
+}

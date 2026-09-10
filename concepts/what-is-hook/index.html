@@ -1,0 +1,3242 @@
+<!DOCTYPE html><html lang="ko" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="MkDocs 로 만드는 문서 사이트">
+      
+      
+      
+        <link rel="canonical" href="https://net-edu.github.io/ai-advanced-lab/concepts/what-is-hook/">
+      
+      
+        <link rel="prev" href="../what-is-rule/">
+      
+      
+        <link rel="next" href="../../claude-code/permissions-and-commands/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/ai-advanced-lab-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Hook - AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/material-wide.css?h=784b2b95">
+    
+      <link rel="stylesheet" href="../../stylesheets/highlight-code.css?h=8c69c83b">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css?h=bccc653e">
+    
+      <link rel="stylesheet" href="../../stylesheets/nav-highlight.css?h=7a985485">
+    
+      <link rel="stylesheet" href="../../stylesheets/asciinema-embed.css?h=6502352e">
+    
+      <link rel="stylesheet" href="../../stylesheets/asciinema-player.css?h=4f1e20ee">
+    
+      <link rel="stylesheet" href="../../stylesheets/claude-terminal.css?h=875ac4fc">
+    
+      <link rel="stylesheet" href="../../stylesheets/code-window.css?h=ec5f3beb">
+    
+      <link rel="stylesheet" href="../../stylesheets/foldable.css?h=2dbfa670">
+    
+      <link rel="stylesheet" href="../../stylesheets/idle-cursor.css?h=b087f15f">
+    
+      <link rel="stylesheet" href="../../stylesheets/learning-tips.css?h=5fd55d6d">
+    
+      <link rel="stylesheet" href="../../stylesheets/leeum-editorial.css?h=80ef6051">
+    
+      <link rel="stylesheet" href="../../stylesheets/markdown-editor.css?h=dfe05bee">
+    
+      <link rel="stylesheet" href="../../stylesheets/minimap.css?h=b1c5522f">
+    
+      <link rel="stylesheet" href="../../stylesheets/service-switcher.css?h=e48abe45">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: black; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#hook" class="md-skip">
+          콘텐츠로 이동
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="상단/헤더">
+    <a href="../.." title="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" class="md-header__button md-logo" aria-label="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" data-md-component="logo">
+      
+  <img src="../../assets/ai-advanced-lab-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Hook
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue" aria-label="야간 모드로 전환" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="야간 모드로 전환" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue" aria-label="주간 모드로 전환" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="주간 모드로 전환" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="검색" placeholder="검색" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="검색">
+        
+        <button type="reset" class="md-search__icon md-icon" title="지우기" aria-label="지우기" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            검색 초기화
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="탭" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  홈
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../warmup/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Warm Up
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../what-is-harness/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Claude Code
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../course/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  (WIP) 실습
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../course/personal-project/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  개인 프로젝트
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/token-saving/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  참고 자료
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../curriculum/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  강의 진행 자료
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="네비게이션" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" class="md-nav__button md-logo" aria-label="AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵" data-md-component="logo">
+      
+  <img src="../../assets/ai-advanced-lab-mark.svg" alt="logo">
+
+    </a>
+    AI Advanced Lab - 나의 업무를 Agent로 이식하기 위한 실습형 워크샵
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    홈
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    홈
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/instructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    강사 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/orientation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    과정 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../warmup/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Warm Up
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Warm Up
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/terminal-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    터미널 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/git-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Git 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/github-basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/markdown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Markdown 기초
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../warmup/claude-code-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code 첫 실행
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Claude Code
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Harness란
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/turn-concept/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Turn과 Agent Loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context를 구성하는 요소들
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Context를 구성하는 요소들
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/claude-md-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLAUDE.md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory-md/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MEMORY.md
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skill
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    권한/실행 (행동 승인·차단)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    권한/실행 (행동 승인·차단)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-rule/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hook
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="목차">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      목차
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#왜-필요한가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        왜 필요한가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hook-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hook lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#이벤트-계층에-따른-hook-구분" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        이벤트 계층에 따른 hook 구분
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#계층-별-hook-호출-timeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        계층 별 hook 호출 timeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#이-외-event-들" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        이 외 event 들
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#실제-동작하는-사례-보기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        실제 동작하는 사례 보기
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-훅을-실행하는-방식---다섯-가지-유형" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 훅을 실행하는 방식 - 다섯 가지 유형
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-stop-훅이-무한-반복에-빠지지-않는-이유" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) Stop 훅이 무한 반복에 빠지지 않는 이유
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-세션을-이어갈-때-훅은-어떻게-동작하는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 세션을 이어갈 때 훅은 어떻게 동작하는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#더-보기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        더 보기
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/permissions-and-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    권한 모드와 슬래시 명령
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5">
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    멀티에이전트 (병렬 실행·격리)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    멀티에이전트 (병렬 실행·격리)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-subagent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subagent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../what-is-agent-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Teams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6">
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    외부연결 (MCP)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    외부연결 (MCP)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mcp/what-is-mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7">
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Marketplace &amp; Plugin
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Marketplace &amp; Plugin
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../marketplace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Marketplace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugin-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin 만들고 배포하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Engineering 3축
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Engineering 3축
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../harness-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Harness Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loop-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loop Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9">
+        
+          
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실무 레퍼런스
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    실무 레퍼런스
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/terminal-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    터미널 기능 총정리
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../claude-code/session-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    세션 이름짓기·재개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../course/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    (WIP) 실습
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    (WIP) 실습
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/problem-definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실습 문제 정의
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/download-course-material/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    실습 자료
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage1-prompt-only/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage1 : 프롬프트만으로 작업해보기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage2-context-attach/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage2 : 컨텍스트 추가해보기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage3-harness/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage3 : 하네스로 구축하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage4-loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage4 : 자가 수정 loop 만들기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage5-oracle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage5 : 오라클로 판정 기준 세우기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage6-mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    (WIP) stage6 : MCP로 실시간 연결하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage7-plugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage7 : 플러그인으로 배포하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/stage8-knowledge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stage8 : 지식으로 자산화하기
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    개인 프로젝트
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    개인 프로젝트
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../course/personal-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    개인 프로젝트
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    참고 자료
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    참고 자료
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/token-saving/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    토큰 절약 기법
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/loop-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loop 의 종류
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/ai-sdlc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI SDLC 소개
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../curriculum/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    강의 진행 자료
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    강의 진행 자료
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="목차">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      목차
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#왜-필요한가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        왜 필요한가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hook-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hook lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#이벤트-계층에-따른-hook-구분" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        이벤트 계층에 따른 hook 구분
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#계층-별-hook-호출-timeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        계층 별 hook 호출 timeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#이-외-event-들" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        이 외 event 들
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#실제-동작하는-사례-보기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        실제 동작하는 사례 보기
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-훅을-실행하는-방식---다섯-가지-유형" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 훅을 실행하는 방식 - 다섯 가지 유형
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-stop-훅이-무한-반복에-빠지지-않는-이유" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) Stop 훅이 무한 반복에 빠지지 않는 이유
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#심화-세션을-이어갈-때-훅은-어떻게-동작하는가" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        (심화) 세션을 이어갈 때 훅은 어떻게 동작하는가
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#더-보기" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        더 보기
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="hook">Hook<a class="headerlink" href="#hook" title="Permanent link">¶</a></h1>
+<p class="ailab-title-subtitle">- 정해진 시점에 끼어드는 자동 실행</p>
+
+<p>Hook은 에이전트 수명주기의 정해진 시점에 자동으로 실행되는 스크립트입니다.</p>
+<p>도구를 부르기 직전, 응답을 끝낼 때처럼 특정 시점이 오면 Claude Code가 등록된 훅을 실행합니다.</p>
+<p>이 페이지는 훅의 정의와 이벤트 종류를 다룹니다.</p>
+<h2 id="왜-필요한가">왜 필요한가<a class="headerlink" href="#왜-필요한가" title="Permanent link">¶</a></h2>
+<p>모델의 능력에만 기대면 작업물의 방향은 의도치 않은 방향으로 흘러갈 수 있습니다.</p>
+<p>hook은 그 규칙을 코드로 못 박아 실행 흐름에 끼워 넣습니다.</p>
+<p>hook은 크게 세 가지 일을 합니다.</p>
+<ul>
+<li><strong>자동 검증</strong> - 도구가 실행된 뒤 결과를 검사합니다. 포맷터나 테스트를 자동으로 돌립니다.</li>
+<li><strong>차단</strong> - 위험한 도구 호출을 실행 전에 막습니다. 보호 대상 파일 편집을 거부합니다.</li>
+<li><strong>되먹임</strong> - 검사에서 걸린 이유를 Claude 에게 돌려주어 스스로 고치게 합니다.</li>
+</ul>
+<h2 id="hook-lifecycle">hook lifecycle<a class="headerlink" href="#hook-lifecycle" title="Permanent link">¶</a></h2>
+<p>색마다 무엇을 뜻하는지는 아래 범례에서 확인합니다.</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph LEGEND["색상 범례"]
+        direction LR
+        L1["세션 레벨&lt;br/&gt;(세션 시작·종료)"]
+        L2["중립 · 대기 단계"]
+        L3["도구 호출 루프"]
+        L4["실제 도구 실행"]
+        L5["턴 종료"]
+        L6["곁가지 · 비동기 이벤트"]
+        L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5 ~~~ L6
+    end
+
+    classDef session fill:#B8D8BE,stroke:#8FBF97,color:#2D5A34;
+    classDef neutral fill:#EDEDEB,stroke:#D5D5D0,color:#1E1E1E;
+    classDef loop fill:#FFF8E1,stroke:#D4A27F,color:#1E1E1E;
+    classDef exec fill:#6AABD2,stroke:#4A8DB8,color:#ffffff;
+    classDef stop fill:#F8D0D0,stroke:#E0A0A0,color:#1E1E1E;
+    classDef side fill:#F9F9F7,stroke:#B0B0B0,color:#757575,stroke-dasharray: 4 3;
+
+    class L1 session;
+    class L2 neutral;
+    class L3 loop;
+    class L4 exec;
+    class L5 stop;
+    class L6 side;</code></pre>
+<pre class="mermaid"><code>flowchart TD
+    Setup["Setup&lt;br/&gt;(Opt-in)"]
+    SessionStart["Session Start"]
+    UserPromptSubmit["UserPromptSubmit"]
+    UserPromptExpansion["UserPrompt Expansion&lt;br/&gt;(slash commands)"]
+
+    Setup -.-&gt; SessionStart
+    SessionStart --&gt; UserPromptSubmit
+    UserPromptSubmit -.-&gt; UserPromptExpansion
+
+    subgraph EACH_TURN["EACH TURN"]
+        direction TB
+        subgraph AGENTIC_LOOP["AGENTIC LOOP"]
+            direction TB
+            PreToolUse["PreToolUse"]
+            PermissionRequest["PermissionRequest"]
+            PermissionDenied["Permission Denied&lt;br/&gt;(auto-mode deny)"]
+            Elicitation["Elicitation&lt;br/&gt;(MCP input)"]
+            ElicitationResult["ElicitationResult&lt;br/&gt;(MCP input)"]
+            ToolExecutes["[tool executes]"]
+            PostToolUse["PostToolUse / PostToolUseFailure"]
+            PostToolBatch["PostToolBatch"]
+            SubagentStartStop["SubagentStart / SubagentStop"]
+            TaskCreated["TaskCreated"]
+            TaskCompleted["TaskCompleted"]
+
+            PreToolUse --&gt; PermissionRequest
+            PermissionRequest -.-&gt;|auto-mode deny| PermissionDenied
+            PermissionRequest --&gt; ToolExecutes
+            Elicitation --&gt; ElicitationResult
+            ElicitationResult -.-&gt; ToolExecutes
+            ToolExecutes --&gt; PostToolUse
+            PostToolUse --&gt; PostToolBatch
+            PostToolBatch --&gt; SubagentStartStop
+            SubagentStartStop --&gt; TaskCreated
+            TaskCreated --&gt; TaskCompleted
+            TaskCompleted -.-&gt;|다음 도구 호출| PreToolUse
+        end
+        StopNode["Stop / StopFailure"]
+        TaskCompleted --&gt; StopNode
+    end
+
+    UserPromptSubmit --&gt; PreToolUse
+    StopNode -.-&gt;|다음 프롬프트| UserPromptSubmit
+
+    TeammateIdle["TeammateIdle"]
+    PreCompact["PreCompact"]
+    PostCompact["PostCompact"]
+    SessionEnd["SessionEnd"]
+
+    StopNode --&gt; TeammateIdle --&gt; PreCompact --&gt; PostCompact --&gt; SessionEnd
+    SessionEnd -.-&gt;|resumed sessions| SessionStart
+
+    classDef session fill:#B8D8BE,stroke:#8FBF97,color:#2D5A34;
+    classDef neutral fill:#EDEDEB,stroke:#D5D5D0,color:#1E1E1E;
+    classDef loop fill:#FFF8E1,stroke:#D4A27F,color:#1E1E1E;
+    classDef exec fill:#6AABD2,stroke:#4A8DB8,color:#ffffff;
+    classDef stop fill:#F8D0D0,stroke:#E0A0A0,color:#1E1E1E;
+    classDef side fill:#F9F9F7,stroke:#B0B0B0,color:#757575,stroke-dasharray: 4 3;
+
+    class SessionStart session;
+    class UserPromptSubmit,TeammateIdle,PreCompact,PostCompact,SessionEnd neutral;
+    class PreToolUse,PermissionRequest,PostToolUse,PostToolBatch,SubagentStartStop,TaskCreated,TaskCompleted loop;
+    class ToolExecutes exec;
+    class StopNode stop;
+    class Setup,UserPromptExpansion,PermissionDenied,Elicitation,ElicitationResult,Notification,ConfigChange,PreModelSwitch,PostModelSwitch,WorktreeCreate,WorktreeRemove,EnvReactive,InstructionsLoaded,MessageDisplay side;</code></pre>
+<p>위 그림은 hook의 실행 주기를 도식화 시킨 것입니다.</p>
+<details>
+<summary>원문 이미지 펼치기 - hooks-lifecycle.svg</summary>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/claude_code/hooks-lifecycle.svg" data-desc-position="bottom"><img alt="hook lifecycle" src="../../media/claude_code/hooks-lifecycle.svg"></a></p>
+</details>
+<h2 id="이벤트-계층에-따른-hook-구분">이벤트 계층에 따른 hook 구분<a class="headerlink" href="#이벤트-계층에-따른-hook-구분" title="Permanent link">¶</a></h2>
+<p>hook은 특정 이벤트에 연결되어 그때만 실행됩니다</p>
+<p><strong>어느 단위마다 반복되는가</strong>를 기준으로 이벤트의 계층이 나뉩니다.</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/concepts/what-is-hook-event-layers.png" data-desc-position="bottom"><img alt="식당 운영으로 비유한 세션·턴·도구 호출 훅의 반복 계층" src="../../media/concepts/what-is-hook-event-layers.png"></a></p>
+<table>
+<thead>
+<tr>
+<th>계층</th>
+<th>반복 단위</th>
+<th>대표 이벤트</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>세션 레벨</td>
+<td>세션 시작·종료 시 한 번</td>
+<td><code>SessionStart</code> · <code>SessionEnd</code> · <code>Setup</code></td>
+</tr>
+<tr>
+<td>턴 레벨</td>
+<td>사용자 프롬프트 하나당 한 번</td>
+<td><code>UserPromptSubmit</code> · <code>Stop</code> · <code>StopFailure</code></td>
+</tr>
+<tr>
+<td>도구 호출 레벨</td>
+<td>턴 안 에이전트 루프에서 도구를 부를 때마다</td>
+<td><code>PreToolUse</code> · <code>PostToolUse</code> · <code>PostToolUseFailure</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="계층-별-hook-호출-timeline">계층 별 hook 호출 timeline<a class="headerlink" href="#계층-별-hook-호출-timeline" title="Permanent link">¶</a></h2>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/concepts/what-is-hook-layer-timeline.png" data-desc-position="bottom"><img alt="level timeline" src="../../media/concepts/what-is-hook-layer-timeline.png"></a></p>
+<h2 id="이-외-event-들">이 외 event 들<a class="headerlink" href="#이-외-event-들" title="Permanent link">¶</a></h2>
+<p>나머지 이벤트도 이 세 계층 어딘가, 또는 그 바깥의 더 세부적인 단위에 속합니다.</p>
+<ul>
+<li><strong>서브에이전트 레벨</strong> - <code>SubagentStart</code> · <code>SubagentStop</code>. subagent 하나가 시작하거나 끝날 때 걸립니다.</li>
+<li><strong>태스크 레벨</strong> - <code>TaskCreated</code> · <code>TaskCompleted</code>. TodoWrite로 만든 할 일 항목 하나가 생기거나 끝날 때 걸립니다.</li>
+<li><strong>환경 변화 이벤트</strong> - <code>FileChanged</code> · <code>CwdChanged</code> · <code>ConfigChange</code> · <code>WorktreeCreate</code>/<code>WorktreeRemove</code> · <code>Notification</code> 등. 턴이나 도구 호출의 순서와 무관하게, 파일·작업 폴더·설정처럼 환경이 바뀌는 순간 비동기로 걸립니다.</li>
+</ul>
+<p>교안 범위에서 전부 다루지는 않지만, 훅 이벤트가 세 개뿐이 아니라 계층별로 나뉜다는 점은 알아 두세요.</p>
+<h2 id="실제-동작하는-사례-보기">실제 동작하는 사례 보기<a class="headerlink" href="#실제-동작하는-사례-보기" title="Permanent link">¶</a></h2>
+<p>여러분들이 보고 계신 이 교안도 claude code로 작성했습니다. 작성을 하며 hook 이 필요한 시점이 있었는데요.</p>
+<p><a href="https://github.com/&lt;GITHUB_OWNER&gt;/&lt;REPOSITORY&gt;/blob/main/.claude/settings.json">1.저장소의 hook setting</a>
+과
+<a href="https://github.com/&lt;GITHUB_OWNER&gt;/&lt;REPOSITORY&gt;/tree/main/.claude/hooks">2.hook script</a>
+에 관련 세팅이 들어가 있습니다.</p>
+<p>코드를 설명 하면 다음과 같은 설정이 들어가 있음을 알 수 있습니다.
+- <code>Edit|Write|MultiEdit|NotebookEdit</code> 등의 작업이 일어나면 <code>.claude/hooks/block-finalized.py</code> hook script 가 실행되도록 해라.
+- <code>Edit|Write|MultiEdit</code> 등의 작업이 일어나면 <code>.claude/hooks/sync-finalized.py</code>  hook script 가 실행되도록 해라.</p>
+<details class="ailab-code">
+<summary>설정 예시 펼치기 - .claude/settings.json</summary>
+<div class="ailab-code-window">
+<div class="ailab-code-titlebar">
+<span class="ailab-code-dots"><span></span><span></span><span></span></span>
+<span class="ailab-code-filename">.claude/settings.json</span>
+</div>
+
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">"PreToolUse"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="nt">"matcher"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Edit|Write|MultiEdit|NotebookEdit"</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="nt">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">          </span><span class="p">{</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"command"</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">            </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-finalized.py\""</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">          </span><span class="p">}</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="p">]</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="p">}</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="p">],</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">"PostToolUse"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">      </span><span class="p">{</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="nt">"matcher"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Edit|Write|MultiEdit"</span><span class="p">,</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">        </span><span class="nt">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">          </span><span class="p">{</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"command"</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">            </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync-finalized.py\""</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">          </span><span class="p">}</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">        </span><span class="p">]</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">      </span><span class="p">}</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="p">}</span>
+</span></code></pre></div>
+
+</div>
+</details>
+<p>교안을 집필 하며 hook 을 왜 넣었을까요?</p>
+<ul>
+<li>
+<p>github page 기반으로 교안 작업을 하며, 이미 검수/집필이 끝난 문서와 그렇지 않은 문서들이 있었습니다.</p>
+</li>
+<li>
+<p>사용자(사람) 입장에서는 검수가 끝난 페이지는 더 이상 ai 가 건드리지 않았으면 좋겠는데 자꾸 건드리는 문제가 발생함.</p>
+</li>
+<li>
+<p>위 상황을 막기 위해, 검수가 끝난 페이지는 별도로 관리하여(<code>FINALIZED.md</code>) 사용자(사람)가 검수를 끝내면 더 이상 해당 페이지를 AI 가 수정하지 못하도록 하길 원했습니다.</p>
+</li>
+</ul>
+<p>이후 hook 을 만들기 위해서 실제로 한 작업은 Claude Code 에서 다음과 같은 prompt 를 집어넣은게 전부입니다.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>검수 끝난 문서를 AI 가 계속 다시 건드리는 문제가 있어. 이걸 방지하기 위한 hook 을 만들어줘.
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>프로젝트 내 모든 md 확장자 파일을 FINALIZED.md 에 남겨줘.
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>hook 은 FINALIZED.md 에 올라간 문서는 수정하지 못하게 막아줬으면 좋겠어.
+</span></code></pre></div>
+<h2 id="심화-훅을-실행하는-방식---다섯-가지-유형">(심화) 훅을 실행하는 방식 - 다섯 가지 유형<a class="headerlink" href="#심화-훅을-실행하는-방식---다섯-가지-유형" title="Permanent link">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">지금은 건너뛰어도 됩니다</p>
+<p>훅으로 셸 스크립트 말고 다른 것도 실행하고 싶을 때 필요합니다. 처음에는 셸 명령 하나만 알면 충분합니다.</p>
+</div>
+<p>훅이 "언제" 걸리는지가 이벤트라면, "무엇을 실행하는지"에도 종류가 있습니다.</p>
+<p>가장 흔한 것은 셸 명령을 돌리는 방식입니다.</p>
+<p>하지만 그 밖에도 실행할 수 있는 대상이 있어, 모두 다섯 가지 유형이 있습니다.</p>
+<ul>
+<li><strong>셸 명령</strong>(<code>command</code>) - 컴퓨터에 직접 명령을 내리는 방식입니다. 스크립트 한 줄을 돌립니다.</li>
+<li><strong>HTTP 요청</strong>(<code>http</code>) - 외부 서버에 신호를 보내는 방식입니다. 예를 들어 사내 시스템에 알림을 띄웁니다.</li>
+<li><strong>MCP 도구</strong>(<code>mcp_tool</code>) - Claude Code 에 연결해 둔 외부 도구를 불러 쓰는 방식입니다.</li>
+<li><strong>프롬프트 평가</strong>(<code>prompt</code>) - 상황을 문장으로 물어보고 그 판단으로 거를지 정하는 방식입니다.</li>
+<li><strong>서브에이전트 판단</strong>(<code>agent</code>) - 별도의 보조 에이전트에게 판단을 맡기는 방식입니다.</li>
+</ul>
+<p>이름과 괄호 안 값은 설정 파일에 그대로 적는 식별자입니다.</p>
+<h2 id="심화-stop-훅이-무한-반복에-빠지지-않는-이유">(심화) Stop 훅이 무한 반복에 빠지지 않는 이유<a class="headerlink" href="#심화-stop-훅이-무한-반복에-빠지지-않는-이유" title="Permanent link">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">지금은 건너뛰어도 됩니다</p>
+<p><code>Stop</code> 훅을 직접 만들어 턴을 막아 볼 때 알아 두면 되는 안전장치입니다.</p>
+</div>
+<p><code>Stop</code> 훅은 응답을 끝내려 할 때마다 걸려 턴을 막을 수 있습니다.</p>
+<p>그러면 "막을 때마다 다시 막혀서 작업이 영영 안 끝나는 것 아니냐"는 걱정이 생깁니다.</p>
+<p>Claude Code 에는 이를 막는 안전장치가 있습니다.</p>
+<p><code>Stop</code> 훅이 아무 진전 없이 8번 연속 차단하면 Claude Code 가 자동으로 훅을 무시하고 턴을 끝냅니다.</p>
+<p>이 8번이라는 상한을 더 올리고 싶으면 <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> 환경변수로 값을 바꾸세요.</p>
+<p>환경변수란 프로그램이 참고하는 설정값을 컴퓨터에 미리 적어 두는 것을 말합니다.</p>
+<p>한 가지 더 있습니다.</p>
+<p>훅 스크립트는 <code>stop_hook_active</code> 라는 신호를 확인할 수 있습니다.</p>
+<p>이 신호는 "지금 Stop 훅 때문에 다시 멈춘 상황"임을 알려 줍니다.</p>
+<p>훅이 이 신호를 보고 스스로 일찍 물러나면, 8번을 다 쓰기 전에 빠르게 포기해 불필요한 반복을 줄입니다.</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../media/concepts/what-is-hook-stop-cap.png" data-desc-position="bottom"><img alt="Stop 훅 차단 횟수가 8에 도달하면 턴을 끝내는 흐름" src="../../media/concepts/what-is-hook-stop-cap.png"></a></p>
+<h2 id="심화-세션을-이어갈-때-훅은-어떻게-동작하는가">(심화) 세션을 이어갈 때 훅은 어떻게 동작하는가<a class="headerlink" href="#심화-세션을-이어갈-때-훅은-어떻게-동작하는가" title="Permanent link">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">지금은 건너뛰어도 됩니다</p>
+<p>세션을 이어가거나(<code>--continue</code>·<code>--resume</code>) 분기(fork)할 때 어떤 훅이 다시 걸리는지 헷갈릴 때 필요합니다.</p>
+</div>
+<p>계층에 따라 재실행 여부가 갈립니다.</p>
+<p>턴 중간에 걸리는 이벤트(<code>PostToolUse</code>, <code>UserPromptSubmit</code> 등)는 다시 실행되지 않고, 저장해 둔 값을 그대로 재생합니다.</p>
+<p>반면 <code>SessionStart</code> 훅은 세션을 이어가거나 분기할 때 다시 실행됩니다.</p>
+<p>세션 레벨 이벤트와 턴·도구 호출 레벨 이벤트가 재시작 시 서로 다르게 취급된다는 것은, 이 둘이 애초에 다른 계층이라는 뜻입니다.</p>
+<h2 id="더-보기">더 보기<a class="headerlink" href="#더-보기" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../loop-engineering/">Loop Engineering</a> - Hook 과 에이전트 루프를 심화로 다룹니다.</li>
+<li><a href="../what-is-rule/">Rule</a> - 훅과 함께 규칙을 강제하는 또 다른 수단입니다.</li>
+<li><a href="../../claude-code/permissions-and-commands/">권한 모드와 슬래시 명령</a> - 훅이 맞물리는 권한 체계입니다.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  맨위로
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.tracking", "navigation.top", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.select"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\ud074\ub9bd\ubcf4\ub4dc\uc5d0 \ubcf5\uc0ac\ub428", "clipboard.copy": "\ud074\ub9bd\ubcf4\ub4dc\ub85c \ubcf5\uc0ac", "search.result.more.one": "\uc774 \ubb38\uc11c\uc5d0\uc11c 1\uac1c\uc758 \uac80\uc0c9 \uacb0\uacfc \ub354 \ubcf4\uae30", "search.result.more.other": "\uc774 \ubb38\uc11c\uc5d0\uc11c #\uac1c\uc758 \uac80\uc0c9 \uacb0\uacfc \ub354 \ubcf4\uae30", "search.result.none": "\uac80\uc0c9\uc5b4\uc640 \uc77c\uce58\ud558\ub294 \ubb38\uc11c\uac00 \uc5c6\uc2b5\ub2c8\ub2e4", "search.result.one": "1\uac1c\uc758 \uc77c\uce58\ud558\ub294 \ubb38\uc11c", "search.result.other": "#\uac1c\uc758 \uc77c\uce58\ud558\ub294 \ubb38\uc11c", "search.result.placeholder": "\uac80\uc0c9\uc5b4\ub97c \uc785\ub825\ud558\uc138\uc694", "search.result.term.missing": "\ud3ec\ud568\ub418\uc9c0 \uc54a\uc740 \uac80\uc0c9\uc5b4", "select.version": "\ubc84\uc804 \uc120\ud0dd"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/service-switcher-config.js?h=6f8d7424"></script>
+      
+        <script src="../../javascripts/asciinema-embed.js?h=353c4861"></script>
+      
+        <script src="../../javascripts/asciinema-player.min.js?h=a84bd73f"></script>
+      
+        <script src="../../javascripts/header-context.js?h=266df885"></script>
+      
+        <script src="../../javascripts/idle-cursor.js?h=94626cf6"></script>
+      
+        <script src="../../javascripts/learning-tips.js?h=290384e6"></script>
+      
+        <script src="../../javascripts/link-target.js?h=641710d9"></script>
+      
+        <script src="../../javascripts/markdown-editor.js?h=9bd465e9"></script>
+      
+        <script src="../../javascripts/mermaid.min.js?h=581ed7d7"></script>
+      
+        <script src="../../javascripts/minimap.js?h=9c55e98a"></script>
+      
+        <script src="../../javascripts/nav-highlight.js?h=02906cf1"></script>
+      
+        <script src="../../javascripts/service-switcher.js?h=4cae2e7b"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

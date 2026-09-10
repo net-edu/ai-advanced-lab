@@ -1,0 +1,31 @@
+/*
+ * AI Build LAB - Material code readability overrides
+ *
+ * Material provides the copy button through `content.code.copy`.
+ * This file only adjusts spacing and readability for teaching screens.
+ */
+
+.md-typeset pre > code,
+.md-typeset .highlight pre,
+.md-typeset .highlight code {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.md-typeset .highlight {
+  border-radius: 0.55rem;
+}
+
+.md-typeset .highlight pre {
+  padding: 0.95rem 1.05rem;
+}
+
+.md-typeset :not(pre) > code {
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.25rem;
+}
+
+.md-typeset code.copy {
+  position: relative;
+}
